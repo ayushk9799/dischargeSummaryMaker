@@ -127,6 +127,8 @@ const styles = StyleSheet.create({
     // justifyContent: "space-between",
     marginBottom: 2,
     marginLeft: 130,
+    border: 1,
+    borderColor: "black",
   },
   investigationLabel: {
     fontSize: 10,
@@ -142,6 +144,106 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
 });
+
+const renderBloodReport = (bloodWorkArray,customBloodWork) => {
+  let one = [];
+  let two = [];
+  console.log(bloodWorkArray);
+  bloodWorkArray.map(([key, value]) => {
+    if (key === "wbcComponents") {
+      Object.entries(value).map(([wbcComponents, wbcComponentsValue]) => {
+        if (wbcComponentsValue.value !== "") {
+          one.push([wbcComponents, wbcComponentsValue]);
+        }
+      });
+    } else {
+      if(value.value!=="")
+      {
+        if (one.length < 9) {
+          one.push([key, value]);
+        } else {
+          two.push([key, value]);
+        }
+      }
+     
+    }
+  });
+  customBloodWork.map((customBloods)=>
+  {
+    if(two.length!==0)
+    {
+      two.push([customBloods.parameter,{value:customBloods.value,unit:customBloods.unit}])
+    }
+    else{
+      one.push([customBloods.parameter,{value:customBloods.value,unit:customBloods.unit}])
+    }
+  })
+  
+  
+  if (two.length !== 0) {
+    return (
+      <View style={{display:'flex',flexDirection:"row",columnGap:50,marginLeft:10}}>
+      <View style={{width:'50%'}}>{one.map(([key, value]) => ( value.value!=="" &&
+          <View key={key} style={{display:"flex",flexDirection:"row",justifyContent:"space-between",}}>
+            <View style={{flex:1}}>
+              <Text style={{fontSize:10,fontFamily:"Tinos"}}>{key
+                .replace(/([A-Z0-9])/g, " $1")
+                .replace(/^./, (str) => str.toUpperCase())}</Text>
+            </View>
+            
+            <View style={{flex:1,flexDirection:"row",justifyContent:"space-between"}}>
+              <Text style={{fontSize:10,fontFamily:"Tinos",textIndent:5}}>{value.value}</Text>
+              <Text style={{fontSize:10,fontFamily:"Tinos",}}>
+                 {value.unit}
+              </Text>
+            </View>
+          </View>
+        ))}</View> 
+        <View style={{width:'50%'}}>
+        {two.map(([key, value]) => ( value.value!=="" &&
+           <View key={key} style={{display:"flex",flexDirection:"row",justifyContent:"space-between",}}>
+           <View style={{flex:1}}>
+             <Text style={{fontSize:10,fontFamily:"Tinos"}}>{ key==="srPsa"?"SR PSA":key
+               .replace(/([A-Z0-9])/g, " $1")
+               .replace(/^./, (str) => str.toUpperCase())}</Text>
+           </View>
+           
+           <View style={{flex:1,flexDirection:"row",justifyContent:"space-between"}}>
+             <Text style={{fontSize:10,fontFamily:"Tinos",textIndent:5}}>{value.value}</Text>
+             <Text style={{fontSize:10,fontFamily:"Tinos",}}>
+                {value.unit}
+             </Text>
+           </View>
+         </View>
+        ))}
+        </View>
+       
+      </View>
+    );
+  } else {
+    return (
+      <View>
+        {one.map(([key, value]) => (
+         <View key={key} style={{display:"flex",flexDirection:"row",justifyContent:"space-between",marginLeft:130}}>
+         <View style={{flex:1}}>
+           <Text style={{fontSize:10,fontFamily:"Tinos"}}>{key==="srPsa"?"SR PSA":key
+             .replace(/([A-Z0-9])/g, " $1")
+             .replace(/^./, (str) => str.toUpperCase())}</Text>
+         </View>
+         
+         <View style={{flex:1,flexDirection:"row",justifyContent:"space-between"}}>
+           <Text style={{fontSize:10,fontFamily:"Tinos",textIndent:5}}>{value.value}</Text>
+           <Text style={{fontSize:10,fontFamily:"Tinos",}}>
+              {value.unit}
+           </Text>
+         </View>
+       </View>
+        ))}
+       
+      </View>
+    );
+  }
+};
 const renderInvestigationSection = (report, date, label) => {
   console.log(report);
   if (!report) return null;
@@ -185,32 +287,39 @@ const DischargeSummaryPDF = ({
   treatment,
   advice,
   dynamicInvestigations,
+  customBloodWork
 }) => (
   <Document>
     <Page size="A4" style={styles.page}>
       <View style={styles.header}>
         <View>
-         
           <Text style={styles.clinicName}>KIDNEY STONE & UROLOGY CLINIC</Text>
         </View>
-        <View style={{display:"flex",flexDirection:"row"}}>
-          <View style={{marginLeft:50}}><Image src={require('./Capture2.png')} style={{ width: 70 }}></Image></View>
-          <View style={{position:"absolute",width:"100%"}}> <Text style={styles.clinicInfo}>
-            Jail Road, Near Mahindra Showroom, Tilkamanjhi, Bhagalpur
-          </Text>
-          <Text style={styles.doctorInfo}>DR. RAJAN KUMAR SINHA</Text>
-          <Text style={styles.clinicInfo}>
-            M.B.B.S(Ranchi), MS(Gen.Surgery), MCh(Urology), Kolkata
-          </Text>
-          <Text style={styles.clinicInfo}>Consultant Urologist</Text>
-          <Text style={styles.clinicInfo}>Mob : 9709993104</Text></View>
-         
+        <View style={{ display: "flex", flexDirection: "row" }}>
+          <View style={{ marginLeft: 50 }}>
+            <Image
+              src={require("./Capture2.png")}
+              style={{ width: 70 }}
+            ></Image>
+          </View>
+          <View style={{ position: "absolute", width: "100%" }}>
+            {" "}
+            <Text style={styles.clinicInfo}>
+              Jail Road, Near Mahindra Showroom, Tilkamanjhi, Bhagalpur
+            </Text>
+            <Text style={styles.doctorInfo}>DR. RAJAN KUMAR SINHA</Text>
+            <Text style={styles.clinicInfo}>
+              M.B.B.S(Ranchi), MS(Gen.Surgery), MCh(Urology), Kolkata
+            </Text>
+            <Text style={styles.clinicInfo}>Consultant Urologist</Text>
+            <Text style={styles.clinicInfo}>Mob : 9709993104</Text>
+          </View>
         </View>
       </View>
 
       <Text style={styles.title}>DISCHARGE SUMMARY</Text>
 
-      <View style={{marginLeft:10,paddingLeft:3}}>
+      <View style={{ marginLeft: 10, paddingLeft: 3 }}>
         <View style={styles.patientInfoGrid}>
           <View style={styles.patientInfoItem}>
             <Text style={styles.text}>Name: {patientInfo.name}</Text>
@@ -244,7 +353,7 @@ const DischargeSummaryPDF = ({
         </View>
       </View>
 
-      <View style={{marginLeft:10,paddingLeft:3}}>
+      <View style={{ marginLeft: 10, paddingLeft: 3 }}>
         <View style={{ display: "flex", flexDirection: "row" }}>
           <View style={{ width: 145 }}>
             <Text style={styles.sectionTitle}>DIAGNOSIS:</Text>
@@ -293,60 +402,11 @@ const DischargeSummaryPDF = ({
               BLOOD REPORT (
               {investigations.bloodWork.date.split("-").reverse().join("-")}):
             </Text>
-            {Object.entries(investigations.bloodWork)
-              .filter(([key]) => key !== "date")
-              .map(([key, value]) => {
-                if (key !== "wbcComponents") {
-                  return (
-                    value.value !== "" && (
-                      <View key={key} style={styles.investigationItem}>
-                        <Text style={[styles.investigationLabel]}>
-                          {key
-                            .replace(/([A-Z0-9])/g, " $1")
-                            .replace(/^./, (str) => str.toUpperCase())}
-                          :
-                        </Text>
-                        <Text style={styles.investigationValue}>
-                          {value.value}
-                        </Text>
-                        <Text style={styles.investigationValue}>
-                          {value.unit}
-                        </Text>
-                      </View>
-                    )
-                  );
-                } else {
-                  return (
-                    <View>
-                      {Object.entries(value).map(
-                        ([components, componentValue]) =>
-                          componentValue.value !== "" && (
-                            <View
-                              key={components}
-                              style={[styles.investigationItem]}
-                            >
-                              <View style={[styles.investigationLabel]}>
-                                {" "}
-                                <Text style={{ textIndent: 10 }}>
-                                  {components
-                                    .replace(/([A-Z0-9])/g, " $1")
-                                    .replace(/^./, (str) => str.toUpperCase())}
-                                  :
-                                </Text>
-                              </View>
-                              <View style={styles.investigationValue}>
-                                <Text>{componentValue.value}</Text>
-                              </View>
-                              <View style={styles.investigationValue}>
-                                <Text>{componentValue.unit}</Text>
-                              </View>
-                            </View>
-                          )
-                      )}
-                    </View>
-                  );
-                }
-              })}
+            {renderBloodReport(
+              Object.entries(investigations.bloodWork).filter(
+                ([key]) => key !== "date"
+              ),customBloodWork
+            )}
           </View>
           {dynamicInvestigations.map((dinvestigations) =>
             renderInvestigationSection(

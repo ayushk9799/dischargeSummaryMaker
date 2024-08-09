@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./App.css";
 import DischargeSummaryPDF from "./PDF";
-import {PDFViewer} from '@react-pdf/renderer'
+import {PDFViewer,PDFDownloadLink} from '@react-pdf/renderer'
 
 function App() {
   const [patientInfo, setPatientInfo] = useState({
@@ -39,14 +39,16 @@ function App() {
       date: "",
      
       hemoglobin: { value: "", unit: "g/dL" },
-      whiteBloodCellCount: { value: "", unit: "cells/µL" },
+      whiteBloodCell: { value: "", unit: "cells/µL" },
       wbcComponents: {
-        neutrophilCount: { value: "", unit: "%" },
-        eosinophilCount: { value: "", unit: "%" },
-        lymphocyteCount: { value: "", unit: "%" },
-        monocyteCount: { value: "", unit: "%" },
-        basophilCount: { value: "", unit: "%" },
+        neutrophil: { value: "", unit: "%" },
+        eosinophil: { value: "", unit: "%" },
+        lymphocyte: { value: "", unit: "%" },
+        monocyte: { value: "", unit: "%" },
+        basophil: { value: "", unit: "%" },
       },
+      platelets:{value:"",unit:"cells/µL"},
+
       bloodGroup: { value: "", unit: "" },
       rhFactor: { value: "", unit: "" },
       elisaForHiv1And2: { value: "", unit: "" },
@@ -55,6 +57,7 @@ function App() {
       bloodUrea: { value: "", unit: "mg/dL" },
       serumCreatinine: { value: "", unit: "mg/dL" },
       bloodSugar: { value: "", unit: "mg/dL" },
+      srPsa:{value:"",unit:"ng/mL"}
     },
   });
 
@@ -76,11 +79,14 @@ function App() {
       { medicine: "", timesPerDay: "", numDoses: "", days: "" },
     ]);
   };
+  const [showPdfViewer, setShowPdfViewer] = useState(false);
 
-  const removeAdviceRow = (index) => {
-    const newAdvice = advice.filter((_, i) => i !== index);
-    setAdvice(newAdvice);
+ 
+
+  const togglePdfViewer = () => {
+    setShowPdfViewer(!showPdfViewer);
   };
+  
   const handlePatientInfoChange = (e) => {
     setPatientInfo({ ...patientInfo, [e.target.name]: e.target.value });
   };
@@ -173,15 +179,16 @@ function App() {
       </select>
     </div>
   );
-  const generatePDF=()=>
-  {
-    DischargeSummaryPDF()
-  }
+ 
   return (
     <div className="app-container">
       <div className="form-container">
-      <h1>Discharge Summary Generator</h1>
-
+      <div className="title-container">
+          <h1>Discharge Summary Generator</h1>
+          <button onClick={togglePdfViewer} className="add-investigation-btn">
+            {showPdfViewer ? "Hide PDF" : "Show PDF"}
+          </button>
+        </div>
 <div className="section patient-info">
   <h2>Patient Information</h2>
   <div className="patient-info-grid">
@@ -384,15 +391,15 @@ function App() {
       />
     </div>
     <div className="input-group">
-      <label htmlFor="whiteBloodCellCount">White Blood Cell Count:</label>
+      <label htmlFor="whiteBloodCell">White Blood Cell Count:</label>
       <input
-        id="whiteBloodCellCount-value"
+        id="whiteBloodCell-value"
         type="text"
-        value={investigations.bloodWork.whiteBloodCellCount.value}
+        value={investigations.bloodWork.whiteBloodCell.value}
         onChange={(e) =>
           handleInvestigationsChange(
             "bloodWork",
-            "whiteBloodCellCount",
+            "whiteBloodCell",
             e.target.value,
             null,
             "value"
@@ -400,13 +407,13 @@ function App() {
         }
       />
       <input
-        id="whiteBloodCellCount-unit"
+        id="whiteBloodCell-unit"
         type="text"
-        value={investigations.bloodWork.whiteBloodCellCount.unit}
+        value={investigations.bloodWork.whiteBloodCell.unit}
         onChange={(e) =>
           handleInvestigationsChange(
             "bloodWork",
-            "whiteBloodCellCount",
+            "whiteBloodCell",
             e.target.value,
             null,
             "unit"
@@ -462,7 +469,7 @@ function App() {
       .filter(
         ([key]) =>
           key !== "wbcComponents" &&
-          key !== "whiteBloodCellCount" &&
+          key !== "whiteBloodCell" &&
           key !== "date"
       )
       .map(([key, { value, unit }]) => {
@@ -719,21 +726,43 @@ function App() {
     + Add Advice
   </button>
 </div>
+<div className="button-container">
+          <PDFDownloadLink
+            document={
+              <DischargeSummaryPDF 
+                patientInfo={patientInfo}
+                investigations={investigations}
+                treatment={treatment}
+                advice={advice}
+                dynamicInvestigations={dynamicInvestigations}
+                customBloodWork={customBloodWork}
+              />
+            }
+            fileName="discharge_summary.pdf"
+          >
+            {({ blob, url, loading, error }) => 
+              loading ? 'Loading document...' : 'Generate PDF'
+            }
+          </PDFDownloadLink>
+          <button onClick={togglePdfViewer}>Preview PDF</button>
+        </div>
       </div>
       
 
-      <div className="pdf-viewer-container">
-        <PDFViewer width="100%" height="100%">
-          <DischargeSummaryPDF 
-            patientInfo={patientInfo}
-            investigations={investigations}
-            treatment={treatment}
-            advice={advice}
-            dynamicInvestigations={dynamicInvestigations}
-            customBloodWork={customBloodWork}
-          />
-        </PDFViewer>
-      </div>
+      {showPdfViewer && (
+        <div className="pdf-viewer-container">
+          <PDFViewer width="100%" height="100%">
+            <DischargeSummaryPDF 
+              patientInfo={patientInfo}
+              investigations={investigations}
+              treatment={treatment}
+              advice={advice}
+              dynamicInvestigations={dynamicInvestigations}
+              customBloodWork={customBloodWork}
+            />
+          </PDFViewer>
+        </div>
+      )}
     </div>
   );
 }
