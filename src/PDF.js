@@ -83,6 +83,7 @@ const styles = StyleSheet.create({
     width: "33%",
     marginBottom: 5,
   },
+
   subsection: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -149,7 +150,7 @@ const renderInvestigationSection = (report, date, label) => {
   const styleWithDate = {
     display: "flex",
     flexDirection: "row",
-    marginBottom: 10,
+    marginBottom: 5,
     marginLeft: 10,
     borderBottom: "1 solid #cccccc",
   };
@@ -158,7 +159,7 @@ const renderInvestigationSection = (report, date, label) => {
     display: "flex",
     flexDirection: "row",
 
-    marginBottom: 10,
+    marginBottom: 5,
     marginLeft: 10,
     borderBottom: "1 solid #cccccc",
   };
@@ -209,7 +210,7 @@ const DischargeSummaryPDF = ({
 
       <Text style={styles.title}>DISCHARGE SUMMARY</Text>
 
-      <View style={styles.section}>
+      <View style={{marginLeft:10,paddingLeft:3}}>
         <View style={styles.patientInfoGrid}>
           <View style={styles.patientInfoItem}>
             <Text style={styles.text}>Name: {patientInfo.name}</Text>
@@ -243,7 +244,7 @@ const DischargeSummaryPDF = ({
         </View>
       </View>
 
-      <View style={styles.section}>
+      <View style={{marginLeft:10,paddingLeft:3}}>
         <View style={{ display: "flex", flexDirection: "row" }}>
           <View style={{ width: 145 }}>
             <Text style={styles.sectionTitle}>DIAGNOSIS:</Text>
