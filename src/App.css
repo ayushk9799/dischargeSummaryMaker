@@ -6,13 +6,14 @@ body {
 
 .app-container {
   display: flex;
-  height: 100vh;
 }
 
 .form-container {
   flex: 1;
   overflow-y: auto;
   padding: 20px;
+  max-width: 50%;
+  min-width: 600px;
 }
 
 .pdf-viewer-container {
