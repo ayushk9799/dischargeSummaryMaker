@@ -359,7 +359,11 @@ const DischargeSummaryPDF = ({
             <Text style={styles.sectionTitle}>DIAGNOSIS:</Text>
           </View>
           <View>
-            <Text style={styles.text}>{patientInfo.diagnosis}</Text>
+          <Text style={styles.text}>
+              {patientInfo.diagnosis === "other" 
+                ? patientInfo.diagnosisOther 
+                : patientInfo.diagnosis}
+            </Text>
           </View>
         </View>
       </View>

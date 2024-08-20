@@ -15,6 +15,7 @@ function App() {
     address: "",
     clinicalSummary: "",
     diagnosis: "",
+    diagnosisOther: "",
   });
   const [advice, setAdvice] = useState([
     { medicine: "", timesPerDay: "", numDoses: "", days: "" },
@@ -81,14 +82,21 @@ function App() {
   };
   const [showPdfViewer, setShowPdfViewer] = useState(false);
 
- 
 
   const togglePdfViewer = () => {
     setShowPdfViewer(!showPdfViewer);
   };
   
   const handlePatientInfoChange = (e) => {
-    setPatientInfo({ ...patientInfo, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    console.log(name)
+    console.log(value)
+    setPatientInfo(prevInfo => ({
+      ...prevInfo,
+      [name]: value,
+      // Reset diagnosisOther when diagnosis is changed to a non-"other" option
+      ...(name === 'diagnosis' && value !== 'other' ? { diagnosisOther: "" } : {})
+    }));
   };
   const addDynamicInvestigation = () => {
     setDynamicInvestigations([
@@ -275,12 +283,41 @@ function App() {
  
   <div className="input-group full-width">
     <label htmlFor="diagnosis">Diagnosis:</label>
-    <textarea
+    <select
       id="diagnosis"
       name="diagnosis"
       value={patientInfo.diagnosis}
       onChange={handlePatientInfoChange}
-    />
+    >
+      <option value="">Select diagnosis</option>
+      <option value="Prostatomegaly">Prostatomegaly</option>
+      <option value="Right Renal Stone">Right Renal Stone</option>
+      <option value="Left Renal Stone">Left Renal Stone</option>
+      <option value="Right Upper ureteric stone">Right Upper ureteric stone</option>
+      <option value="Left Upper ureteric stone">Left Upper ureteric stone</option>
+      <option value="Right lower ureteric stone">Right lower ureteric stone</option>
+      <option value="Left lower ureteric stone">Left lower ureteric stone</option>
+      <option value="Prostatomegaly + Bladder stone">Prostatomegaly + Bladder stone</option>
+      <option value="Gall bladder stone">Gall bladder stone</option>
+      <option value="Right inguinal hernia">Right inguinal hernia</option>
+      <option value="Left inguinal hernia">Left inguinal hernia</option>
+      <option value="Bladder stone">Bladder stone</option>
+      <option value="Urethral stricture">Urethral stricture</option>
+      <option value="Incisional hernia">Incisional hernia</option>
+      <option value="Right Pyeloureteric Obstruction">Right Pyeloureteric Obstruction</option>
+      <option value="Left Pyeloureteric obstruction">Left Pyeloureteric obstruction</option>
+      <option value="Hypospadia">Hypospadia</option>
+      <option value="other">Other</option>
+    </select>
+    {patientInfo.diagnosis === "other" && (
+      <textarea
+        id="diagnosisOther"
+        name="diagnosisOther"
+        value={patientInfo.diagnosisOther || ""}
+        onChange={handlePatientInfoChange}
+        placeholder="Enter custom diagnosis"
+      />
+    )}
   </div>
   <div className="input-group full-width">
     <label htmlFor="clinicalSummary">Clinical Summary:</label>
