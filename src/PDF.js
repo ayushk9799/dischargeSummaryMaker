@@ -145,40 +145,34 @@ const styles = StyleSheet.create({
   },
 });
 
-const renderBloodReport = (bloodWorkArray,customBloodWork) => {
+const renderBloodReport = (bloodWorkArray, customBloodWork) => {
   let one = [];
   let two = [];
   console.log(bloodWorkArray);
-  bloodWorkArray.map(([key, value]) => {
+  bloodWorkArray.forEach(([key, value]) => {
     if (key === "wbcComponents") {
-      Object.entries(value).map(([wbcComponents, wbcComponentsValue]) => {
+      Object.entries(value).forEach(([wbcComponents, wbcComponentsValue]) => {
         if (wbcComponentsValue.value !== "") {
           one.push([wbcComponents, wbcComponentsValue]);
         }
       });
     } else {
-      if(value.value!=="")
-      {
+      if(value.value !== "") {
         if (one.length < 9) {
           one.push([key, value]);
         } else {
           two.push([key, value]);
         }
       }
-     
     }
   });
-  customBloodWork.map((customBloods)=>
-  {
-    if(two.length!==0)
-    {
-      two.push([customBloods.parameter,{value:customBloods.value,unit:customBloods.unit}])
+  customBloodWork.forEach((customBloods) => {
+    if(two.length !== 0) {
+      two.push([customBloods.parameter, {value: customBloods.value, unit: customBloods.unit}]);
+    } else {
+      one.push([customBloods.parameter, {value: customBloods.value, unit: customBloods.unit}]);
     }
-    else{
-      one.push([customBloods.parameter,{value:customBloods.value,unit:customBloods.unit}])
-    }
-  })
-  
+  });
   
   if (two.length !== 0) {
     return (
@@ -288,191 +282,211 @@ const DischargeSummaryPDF = ({
   advice,
   dynamicInvestigations,
   customBloodWork
-}) => (
-  <Document>
-    <Page size="A4" style={styles.page}>
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.clinicName}>KIDNEY STONE & UROLOGY CLINIC</Text>
-        </View>
-        <View style={{ display: "flex", flexDirection: "row" }}>
-          <View style={{ marginLeft: 50 }}>
-            <Image
-              src={require("./Capture2.png")}
-              style={{ width: 70 }}
-            ></Image>
-          </View>
-          <View style={{ position: "absolute", width: "100%" }}>
-            {" "}
-            <Text style={styles.clinicInfo}>
-              Jail Road, Near Mahindra Showroom, Tilkamanjhi, Bhagalpur
-            </Text>
-            <Text style={styles.doctorInfo}>DR. RAJAN KUMAR SINHA</Text>
-            <Text style={styles.clinicInfo}>
-              M.B.B.S(Ranchi), MS(Gen.Surgery), MCh(Urology), Kolkata
-            </Text>
-            <Text style={styles.clinicInfo}>Consultant Urologist</Text>
-            <Text style={styles.clinicInfo}>Mob : 9709993104</Text>
-          </View>
-        </View>
-      </View>
+}) => {
+  console.log(patientInfo)
+  console.log(advice)
+  const formatDiagnosis = () => {
+    const mainDiagnoses = patientInfo.diagnosis.filter(d => d !== 'other');
+    const otherDiagnosis = patientInfo.diagnosisOther ? [patientInfo.diagnosisOther] : [];
+    const allDiagnoses = [...mainDiagnoses, ...otherDiagnosis];
+    
+    if (allDiagnoses.length === 0) return '';
+    if (allDiagnoses.length === 1) return allDiagnoses[0];
+    if (allDiagnoses.length === 2) return allDiagnoses.join(' and ');
+    return allDiagnoses.slice(0, -1).join(', ') + ', and ' + allDiagnoses.slice(-1);
+  };
 
-      <Text style={styles.title}>DISCHARGE SUMMARY</Text>
-
-      <View style={{ marginLeft: 10, paddingLeft: 3 }}>
-        <View style={styles.patientInfoGrid}>
-          <View style={styles.patientInfoItem}>
-            <Text style={styles.text}>Name: {patientInfo.name}</Text>
-          </View>
-          <View style={styles.patientInfoItem}>
-            <Text style={styles.text}>
-              Age/Sex: {patientInfo.age} yrs /{patientInfo.gender}
-            </Text>
-          </View>
-          <View style={styles.patientInfoItem}>
-            <Text style={styles.text}>
-              DOA: {patientInfo.admitDate.split("-").reverse().join("-")}
-            </Text>
-          </View>
-          <View style={styles.patientInfoItem}>
-            <Text style={styles.text}>
-              DOD: {patientInfo.dischargeDate.split("-").reverse().join("-")}
-            </Text>
-          </View>
-          <View style={styles.patientInfoItem}>
-            <Text style={styles.text}>
-              Reg. No.: {patientInfo.registrationNo}
-            </Text>
-          </View>
-          <View style={styles.patientInfoItem}>
-            <Text style={styles.text}>Room No: {patientInfo.roomNo}</Text>
-          </View>
-          <View style={styles.patientInfoItem}>
-            <Text style={styles.text}>Address: {patientInfo.address}</Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={{ marginLeft: 10, paddingLeft: 3 }}>
-        <View style={{ display: "flex", flexDirection: "row" }}>
-          <View style={{ width: 145 }}>
-            <Text style={styles.sectionTitle}>DIAGNOSIS:</Text>
-          </View>
+  return (
+    <Document>
+      <Page size="A4" style={styles.page}>
+        <View style={styles.header}>
           <View>
-          <Text style={styles.text}>
-              {patientInfo.diagnosis === "other" 
-                ? patientInfo.diagnosisOther 
-                : patientInfo.diagnosis}
-            </Text>
+            <Text style={styles.clinicName}>KIDNEY STONE & UROLOGY CLINIC</Text>
+          </View>
+          <View style={{ display: "flex", flexDirection: "row" }}>
+            <View style={{ marginLeft: 50 }}>
+              <Image
+                src={require("./Capture2.png")}
+                style={{ width: 70 }}
+              ></Image>
+            </View>
+            <View style={{ position: "absolute", width: "100%" }}>
+              {" "}
+              <Text style={styles.clinicInfo}>
+                Jail Road, Near Mahindra Showroom, Tilkamanjhi, Bhagalpur
+              </Text>
+              <Text style={styles.doctorInfo}>DR. RAJAN KUMAR SINHA</Text>
+              <Text style={styles.clinicInfo}>
+                M.B.B.S(Ranchi), MS(Gen.Surgery), MCh(Urology), Kolkata
+              </Text>
+              <Text style={styles.clinicInfo}>Consultant Urologist</Text>
+              <Text style={styles.clinicInfo}>Mob : 9709993104</Text>
+            </View>
           </View>
         </View>
-      </View>
 
-      <View style={styles.section}>
-        <View style={{ display: "flex", flexDirection: "row" }}>
-          <View style={{ width: 145 }}>
-            {" "}
-            <Text style={styles.sectionTitle}>CLINICAL SUMMARY:</Text>
-          </View>
-          <View>
-            <Text style={styles.text}>{patientInfo.clinicalSummary}</Text>
+        <Text style={styles.title}>DISCHARGE SUMMARY</Text>
+
+        <View style={{ marginLeft: 10, paddingLeft: 3 }}>
+          <View style={styles.patientInfoGrid}>
+            <View style={styles.patientInfoItem}>
+              <Text style={styles.text}>Name: {patientInfo.name}</Text>
+            </View>
+            <View style={styles.patientInfoItem}>
+              <Text style={styles.text}>
+                Age/Sex: {patientInfo.age} yrs /{patientInfo.gender}
+              </Text>
+            </View>
+            <View style={styles.patientInfoItem}>
+              <Text style={styles.text}>
+                DOA: {patientInfo.admitDate.split("-").reverse().join("-")}
+              </Text>
+            </View>
+            <View style={styles.patientInfoItem}>
+              <Text style={styles.text}>
+                DOD: {patientInfo.dischargeDate.split("-").reverse().join("-")}
+              </Text>
+            </View>
+            <View style={styles.patientInfoItem}>
+              <Text style={styles.text}>
+                Reg. No.: {patientInfo.registrationNo}
+              </Text>
+            </View>
+            <View style={styles.patientInfoItem}>
+              <Text style={styles.text}>Room No: {patientInfo.roomNo}</Text>
+            </View>
+            <View style={styles.patientInfoItem}>
+              <Text style={styles.text}>Address: {patientInfo.address}</Text>
+            </View>
           </View>
         </View>
-      </View>
 
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { marginBottom: 10 }]}>
-          INVESTIGATION:
-        </Text>
-        <View style={styles.sectionContent}>
-          {renderInvestigationSection(
-            investigations.ultrasonography.report,
-            investigations.ultrasonography.date,
-            "USG WA"
-          )}
-          {renderInvestigationSection(
-            investigations.ivp.report,
-            investigations.ivp.date,
-            "IVP"
-          )}
-          {renderInvestigationSection(
-            investigations.ctkub.report,
-            investigations.ctkub.date,
-            "CT KUB"
-          )}
+        <View style={{ marginLeft: 10, paddingLeft: 3 }}>
+          <View style={{ display: "flex", flexDirection: "row" }}>
+            <View style={{ width: 145 }}>
+              <Text style={styles.sectionTitle}>DIAGNOSIS:</Text>
+            </View>
+            <View>
+              <Text style={styles.text}>
+                {formatDiagnosis()}
+              </Text>
+            </View>
+          </View>
+        </View>
 
-          <View style={styles.bloodSection}>
-            <Text style={[styles.text, styles.boldText]}>
-              BLOOD REPORT (
-              {investigations.bloodWork.date.split("-").reverse().join("-")}):
-            </Text>
-            {renderBloodReport(
-              Object.entries(investigations.bloodWork).filter(
-                ([key]) => key !== "date"
-              ),customBloodWork
+        <View style={styles.section}>
+          <View style={{ display: "flex", flexDirection: "row" }}>
+            <View style={{ width: 145 }}>
+              {" "}
+              <Text style={styles.sectionTitle}>CLINICAL SUMMARY:</Text>
+            </View>
+            <View>
+              <Text style={styles.text}>
+                {patientInfo.clinicalSummary}
+                {patientInfo.comorbidities.length > 0 && (
+                  `, ${patientInfo.comorbidities.filter((value)=>value!=="Other").join(", ")}${
+                    patientInfo.comorbidities.includes("Other") ? `, ${patientInfo.comorbidityOther}` : ""
+                  }`
+                )}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { marginBottom: 10 }]}>
+            INVESTIGATION:
+          </Text>
+          <View style={styles.sectionContent}>
+            {renderInvestigationSection(
+              investigations.ultrasonography.report,
+              investigations.ultrasonography.date,
+              "USG WA"
+            )}
+            {renderInvestigationSection(
+              investigations.ivp.report,
+              investigations.ivp.date,
+              "IVP"
+            )}
+            {renderInvestigationSection(
+              investigations.ctkub.report,
+              investigations.ctkub.date,
+              "CT KUB"
+            )}
+
+            <View style={styles.bloodSection}>
+              <Text style={[styles.text, styles.boldText]}>
+                BLOOD REPORT (
+                {investigations.bloodWork.date.split("-").reverse().join("-")}):
+              </Text>
+              {renderBloodReport(
+                Object.entries(investigations.bloodWork).filter(
+                  ([key]) => key !== "date"
+                ),customBloodWork
+              )}
+            </View>
+            {dynamicInvestigations.map((dinvestigations) =>
+              renderInvestigationSection(
+                dinvestigations.report,
+                dinvestigations.date,
+                dinvestigations.name
+              )
             )}
           </View>
-          {dynamicInvestigations.map((dinvestigations) =>
-            renderInvestigationSection(
-              dinvestigations.report,
-              dinvestigations.date,
-              dinvestigations.name
-            )
-          )}
         </View>
-      </View>
 
-      <View style={[styles.section, { display: "flex", flexDirection: "row" }]}>
-        <View style={{ width: 145 }}>
-          <Text style={styles.sectionTitle}>TREATMENT:</Text>
-          <Text style={styles.text}>
-            ({treatment.date.split("-").reverse().join("-")})
+        <View style={[styles.section, { display: "flex", flexDirection: "row" }]}>
+          <View style={{ width: 145 }}>
+            <Text style={styles.sectionTitle}>TREATMENT:</Text>
+            <Text style={styles.text}>
+              ({treatment.date.split("-").reverse().join("-")})
+            </Text>
+          </View>
+
+          <View style={styles.reportText}>
+            <Text style={styles.text}>{treatment.treatment}</Text>
+          </View>
+        </View>
+
+        <View style={[styles.section, { display: "flex", flexDirection: "row" }]}>
+          <View style={{ width: 145 }}>
+            <Text style={styles.sectionTitle}>ADVICE:</Text>
+          </View>
+          <View style={[styles.reportText]}>
+            {advice.map(
+              (item, index) =>
+                item.medicine !== "" && (
+                  <View
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                    }}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <Text key={index} style={styles.text}>
+                        {index + 1}. {item.medicine} 
+                      </Text>
+                    
+                    </View>
+                    {(item.timesPerDay && item.numDoses && item.days)&& <View>
+                        <Text style={styles.text}  key={index}>
+                          {item.timesPerDay} x {item.numDoses}- {item.days} days
+                        </Text>
+                      </View>}
+                      
+                  </View>
+                )
+            )}
+          </View>
+        </View>
+        <View style={{ width: "100%", textAlign: "right", marginTop: 10 }}>
+          <Text style={{ fontSize: 16, fontWeight: "hairline" }}>
+            Doctor's Signature
           </Text>
         </View>
-
-        <View style={styles.reportText}>
-          <Text style={styles.text}>{treatment.treatment}</Text>
-        </View>
-      </View>
-
-      <View style={[styles.section, { display: "flex", flexDirection: "row" }]}>
-        <View style={{ width: 145 }}>
-          <Text style={styles.sectionTitle}>ADVICE:</Text>
-        </View>
-        <View style={[styles.reportText]}>
-          {advice.map(
-            (item, index) =>
-              item.medicine !== "" && (
-                <View
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                  }}
-                >
-                  <View style={{ flex: 1 }}>
-                    <Text key={index} style={styles.text}>
-                      {index + 1}. {item.medicine}{" "}
-                    </Text>
-                  </View>
-                  {item.timesPerDay && item.numDoses && item.day && (
-                    <View>
-                      <Text style={styles.text}>
-                        {item.timesPerDay} x {item.numDoses}- {item.days} days
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              )
-          )}
-        </View>
-      </View>
-      <View style={{ width: "100%", textAlign: "right", marginTop: 10 }}>
-        <Text style={{ fontSize: 16, fontWeight: "hairline" }}>
-          Doctor's Signature
-        </Text>
-      </View>
-    </Page>
-  </Document>
-);
+      </Page>
+    </Document>
+  );
+};
 
 export default DischargeSummaryPDF;

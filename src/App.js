@@ -3,6 +3,47 @@ import "./App.css";
 import DischargeSummaryPDF from "./PDF";
 import {PDFViewer,PDFDownloadLink} from '@react-pdf/renderer'
 
+const MultiSelect = ({ options, value, onChange, onOtherSelected }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleToggle = () => setIsOpen(!isOpen);
+
+  const handleOptionClick = (option) => {
+    let newValue;
+    if (option === 'other') {
+      newValue = value.includes(option) ? value.filter(item => item !== option) : [...value, option];
+      setIsOpen(false);
+      onOtherSelected();
+    } else {
+      newValue = value.includes(option)
+        ? value.filter(item => item !== option)
+        : [...value, option];
+    }
+    onChange(newValue);
+  };
+
+  return (
+    <div className="multi-select">
+      <div className="select-header" onClick={handleToggle}>
+        {value.length ? value.join(', ') : 'Select options'}
+      </div>
+      {isOpen && (
+        <div className="options-container">
+          {options.map(option => (
+            <div
+              key={option}
+              className={`option ${value.includes(option) ? 'selected' : ''}`}
+              onClick={() => handleOptionClick(option)}
+            >
+              {option}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 function App() {
   const [patientInfo, setPatientInfo] = useState({
     registrationNo: "",
@@ -14,7 +55,9 @@ function App() {
     dischargeDate: "",
     address: "",
     clinicalSummary: "",
-    diagnosis: "",
+    comorbidities: [],
+    comorbidityOther: "",
+    diagnosis: [],
     diagnosisOther: "",
   });
   const [advice, setAdvice] = useState([
@@ -88,15 +131,31 @@ function App() {
   
   const handlePatientInfoChange = (e) => {
     const { name, value } = e.target;
-    console.log(name)
-    console.log(value)
     setPatientInfo(prevInfo => ({
       ...prevInfo,
       [name]: value,
-      // Reset diagnosisOther when diagnosis is changed to a non-"other" option
-      ...(name === 'diagnosis' && value !== 'other' ? { diagnosisOther: "" } : {})
+      ...(name === 'diagnosis' && value !== 'other' ? { diagnosisOther: "" } : {}),
+      ...(name === 'comorbidities' ? { comorbidities: Array.from(e.target.selectedOptions, option => option.value) } : {})
     }));
   };
+
+  const handleComorbidityChange = (e) => {
+    const { value, checked } = e.target;
+    setPatientInfo(prevInfo => {
+      let updatedComorbidities = [...prevInfo.comorbidities];
+      if (checked) {
+        updatedComorbidities.push(value);
+      } else {
+        updatedComorbidities = updatedComorbidities.filter(item => item !== value);
+      }
+      return {
+        ...prevInfo,
+        comorbidities: updatedComorbidities,
+        comorbidityOther: value === 'Other' && !checked ? '' : prevInfo.comorbidityOther
+      };
+    });
+  };
+
   const addDynamicInvestigation = () => {
     setDynamicInvestigations([
       ...dynamicInvestigations,
@@ -186,7 +245,7 @@ function App() {
       </select>
     </div>
   );
- 
+
   return (
     <div className="app-container">
       <div className="form-container">
@@ -231,23 +290,33 @@ function App() {
     </div>
     <div className="input-group">
       <label htmlFor="gender">Gender:</label>
-      <input
+      <select
         id="gender"
         name="gender"
-        type="text"
         value={patientInfo.gender}
         onChange={handlePatientInfoChange}
-      />
+      >
+        <option value="">Select gender</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+        <option value="Other">Other</option>
+      </select>
     </div>
     <div className="input-group">
       <label htmlFor="roomNo">Room No:</label>
-      <input
+      <select
         id="roomNo"
         name="roomNo"
-        type="text"
         value={patientInfo.roomNo}
         onChange={handlePatientInfoChange}
-      />
+      >
+        <option value="">Select room</option>
+        {[...Array(13)].map((_, index) => (
+          <option key={index + 1} value={index + 1}>
+            {index + 1}
+          </option>
+        ))}
+      </select>
     </div>
     <div className="input-group">
       <label htmlFor="admitDate">Admit Date:</label>
@@ -282,40 +351,40 @@ function App() {
  
   <div className="input-group full-width">
     <label htmlFor="diagnosis">Diagnosis:</label>
-    <select
-      id="diagnosis"
-      name="diagnosis"
+    <MultiSelect
+      options={[
+        "Prostatomegaly", "Right Renal Stone", "Left Renal Stone",
+        "Right Upper ureteric stone", "Left Upper ureteric stone",
+        "Right lower ureteric stone", "Left lower ureteric stone",
+        "Prostatomegaly + Bladder stone", "Gall bladder stone",
+        "Right inguinal hernia", "Left Inguinal Hernia", "Bladder Stone",
+        "Urethral Stricture", "Incisional Hernia",
+        "Right Pyeloureteric Junction Obstruction",
+        "Left Pyeloureteric Junction obstruction", "Hypospadias",
+        "Penile Fracture", "Priapism", "Posterior Urethral", "other"
+      ]}
       value={patientInfo.diagnosis}
-      onChange={handlePatientInfoChange}
-    >
-      <option value="">Select diagnosis</option>
-      <option value="Prostatomegaly">Prostatomegaly</option>
-      <option value="Right Renal Stone">Right Renal Stone</option>
-      <option value="Left Renal Stone">Left Renal Stone</option>
-      <option value="Right Upper ureteric stone">Right Upper ureteric stone</option>
-      <option value="Left Upper ureteric stone">Left Upper ureteric stone</option>
-      <option value="Right lower ureteric stone">Right lower ureteric stone</option>
-      <option value="Left lower ureteric stone">Left lower ureteric stone</option>
-      <option value="Prostatomegaly + Bladder stone">Prostatomegaly + Bladder stone</option>
-      <option value="Gall bladder stone">Gall bladder stone</option>
-      <option value="Right inguinal hernia">Right inguinal hernia</option>
-      <option value="Left inguinal hernia">Left inguinal hernia</option>
-      <option value="Bladder stone">Bladder stone</option>
-      <option value="Urethral stricture">Urethral stricture</option>
-      <option value="Incisional hernia">Incisional hernia</option>
-      <option value="Right Pyeloureteric Obstruction">Right Pyeloureteric Obstruction</option>
-      <option value="Left Pyeloureteric obstruction">Left Pyeloureteric obstruction</option>
-      <option value="Hypospadia">Hypospadia</option>
-      <option value="other">Other</option>
-    </select>
-    {patientInfo.diagnosis === "other" && (
-      <textarea
-        id="diagnosisOther"
-        name="diagnosisOther"
-        value={patientInfo.diagnosisOther || ""}
-        onChange={handlePatientInfoChange}
-        placeholder="Enter custom diagnosis"
-      />
+      onChange={(newDiagnosis) => {
+        setPatientInfo(prevInfo => ({
+          ...prevInfo,
+          diagnosis: newDiagnosis,
+          diagnosisOther: newDiagnosis.includes('other') ? prevInfo.diagnosisOther : ''
+        }));
+      }}
+      onOtherSelected={() => {}}
+    />
+    {patientInfo.diagnosis.includes("other") && (
+      <div className="input-group full-width">
+        <label htmlFor="diagnosisOther">Other Diagnosis:</label>
+        <input
+          id="diagnosisOther"
+          name="diagnosisOther"
+          type="text"
+          value={patientInfo.diagnosisOther}
+          onChange={handlePatientInfoChange}
+          placeholder="Enter custom diagnosis"
+        />
+      </div>
     )}
   </div>
   <div className="input-group full-width">
@@ -327,6 +396,37 @@ function App() {
       onChange={handlePatientInfoChange}
     />
   </div>
+
+  <div className="input-group full-width">
+    <label>Comorbidities:</label>
+    <div className="checkbox-group">
+      {['Diabetes', 'Hypertension', 'COPD', 'CAD', 'CKD', 'Other'].map((option) => (
+        <label key={option} className="checkbox-label">
+          <input
+            type="checkbox"
+            value={option}
+            checked={patientInfo.comorbidities.includes(option)}
+            onChange={handleComorbidityChange}
+          />
+          {option}
+        </label>
+      ))}
+    </div>
+  </div>
+
+  {patientInfo.comorbidities.includes("Other") && (
+    <div className="input-group full-width">
+      <label htmlFor="comorbidityOther">Other Comorbidities:</label>
+      <input
+        id="comorbidityOther"
+        name="comorbidityOther"
+        type="text"
+        value={patientInfo.comorbidityOther}
+        onChange={handlePatientInfoChange}
+        placeholder="Enter other comorbidities"
+      />
+    </div>
+  )}
 </div>
 
 <div className="section investigations">
