@@ -1,17 +1,17 @@
 {
   "files": {
-    "main.css": "/dischargeSummaryMaker/static/css/main.87091934.css",
-    "main.js": "/dischargeSummaryMaker/static/js/main.c698ea25.js",
+    "main.css": "/dischargeSummaryMaker/static/css/main.3dd35a79.css",
+    "main.js": "/dischargeSummaryMaker/static/js/main.af80e714.js",
     "static/js/453.2eb90802.chunk.js": "/dischargeSummaryMaker/static/js/453.2eb90802.chunk.js",
     "static/media/Tinos-Regular.ttf": "/dischargeSummaryMaker/static/media/Tinos-Regular.83a9accf4fde7027b6d2.ttf",
     "static/media/Capture2.png": "/dischargeSummaryMaker/static/media/Capture2.9e05b26f8d0f2965f14c.png",
     "index.html": "/dischargeSummaryMaker/index.html",
-    "main.87091934.css.map": "/dischargeSummaryMaker/static/css/main.87091934.css.map",
-    "main.c698ea25.js.map": "/dischargeSummaryMaker/static/js/main.c698ea25.js.map",
+    "main.3dd35a79.css.map": "/dischargeSummaryMaker/static/css/main.3dd35a79.css.map",
+    "main.af80e714.js.map": "/dischargeSummaryMaker/static/js/main.af80e714.js.map",
     "453.2eb90802.chunk.js.map": "/dischargeSummaryMaker/static/js/453.2eb90802.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.87091934.css",
-    "static/js/main.c698ea25.js"
+    "static/css/main.3dd35a79.css",
+    "static/js/main.af80e714.js"
   ]
 }
