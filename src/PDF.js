@@ -186,7 +186,7 @@ const renderBloodReport = (bloodWorkArray,customBloodWork) => {
       <View style={{width:'50%'}}>{one.map(([key, value]) => ( value.value!=="" &&
           <View key={key} style={{display:"flex",flexDirection:"row",justifyContent:"space-between",}}>
             <View style={{flex:1}}>
-              <Text style={{fontSize:10,fontFamily:"Tinos"}}>{key
+              <Text style={{fontSize:10,fontFamily:"Tinos"}}>{key==="srPsa"?"Sr PSA":key
                 .replace(/([A-Z0-9])/g, " $1")
                 .replace(/^./, (str) => str.toUpperCase())}</Text>
             </View>
@@ -203,7 +203,7 @@ const renderBloodReport = (bloodWorkArray,customBloodWork) => {
         {two.map(([key, value]) => ( value.value!=="" &&
            <View key={key} style={{display:"flex",flexDirection:"row",justifyContent:"space-between",}}>
            <View style={{flex:1}}>
-             <Text style={{fontSize:10,fontFamily:"Tinos"}}>{ key==="srPsa"?"SR PSA":key
+             <Text style={{fontSize:10,fontFamily:"Tinos"}}>{ key==="srPsa"?"Sr PSA":key
                .replace(/([A-Z0-9])/g, " $1")
                .replace(/^./, (str) => str.toUpperCase())}</Text>
            </View>
@@ -226,7 +226,7 @@ const renderBloodReport = (bloodWorkArray,customBloodWork) => {
         {one.map(([key, value]) => (
          <View key={key} style={{display:"flex",flexDirection:"row",justifyContent:"space-between",marginLeft:130}}>
          <View style={{flex:1}}>
-           <Text style={{fontSize:10,fontFamily:"Tinos"}}>{key==="srPsa"?"SR PSA":key
+           <Text style={{fontSize:10,fontFamily:"Tinos"}}>{key==="srPsa"?"Sr PSA":key
              .replace(/([A-Z0-9])/g, " $1")
              .replace(/^./, (str) => str.toUpperCase())}</Text>
          </View>

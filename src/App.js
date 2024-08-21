@@ -45,8 +45,7 @@ function App() {
         neutrophil: { value: "", unit: "%" },
         eosinophil: { value: "", unit: "%" },
         lymphocyte: { value: "", unit: "%" },
-        monocyte: { value: "", unit: "%" },
-        basophil: { value: "", unit: "%" },
+       
       },
       platelets:{value:"",unit:"cells/µL"},
 
@@ -541,9 +540,10 @@ function App() {
           return (
             <div className="input-group" key={key}>
               <label htmlFor={key}>
-                {key
-                  .replace(/([A-Z0-9])/g, " $1")
-                  .replace(/^./, (str) => str.toUpperCase())}
+              {key === "srPsa" ? "Sr PSA" : 
+              key
+                .replace(/([A-Z0-9])/g, " $1")
+                .replace(/^./, (str) => str.toUpperCase())}
                 :
               </label>
               <input
