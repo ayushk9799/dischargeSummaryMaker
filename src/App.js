@@ -843,6 +843,7 @@ function App() {
         <option value="Tab Pantaprazole 80 mg" />
         <option value="Tab Rabeprazole 20 mg" />
         <option value="Tab Hifenac P" />
+        <option value="Inj Cefoperazone + Salbactum 1.5 gm IV" />
          </datalist>
       </div>
       <div className="input-group dosage">
