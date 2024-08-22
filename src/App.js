@@ -822,10 +822,28 @@ function App() {
           type="text"
           placeholder="Medicine/Advice"
           value={item.medicine}
+          list="medicationList"
           onChange={(e) =>
             handleAdviceChange(index, "medicine", e.target.value)
           }
         />
+        <datalist id="medicationList">
+        <option value="Inj Cezsal 1.5 gm IV" />
+        <option value="Inj Cefobita 1.5 gm IV" />
+        <option value="Inj Pipzo 4.5 gm IV with 100ml NS" />
+        <option value="Inj Meropenem 1 gm IV with 100ml NS" />
+        <option value="Inj Effectal S 1.125 gm IV"/>
+        <option value="Inj Amikacin 500 mg IV" />
+        <option value="Inj Aquadal Aq IV" />
+        <option value="Tab Levofloxacin 500 mg" />
+        <option value="Tab Clavox 625 mg" />
+        <option value="Tab Spaflam" />
+        <option value="Inj Clindamycin 300 mg IV with 100ml NS" />
+        <option value="Tab Omeprazole 20 mg" />
+        <option value="Tab Pantaprazole 80 mg" />
+        <option value="Tab Rabeprazole 20 mg" />
+        <option value="Tab Hifenac P" />
+         </datalist>
       </div>
       <div className="input-group dosage">
         <input
@@ -854,6 +872,7 @@ function App() {
             handleAdviceChange(index, "days", e.target.value)
           }
         />
+        
         <span>days</span>
       </div>
       
