@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 import DischargeSummaryPDF from "./PDF";
 import {PDFViewer,PDFDownloadLink} from '@react-pdf/renderer'
@@ -81,14 +81,12 @@ function App() {
     },
     bloodWork: {
       date: "",
-     
       hemoglobin: { value: "", unit: "g/dL" },
       whiteBloodCell: { value: "", unit: "cells/µL" },
       wbcComponents: {
         neutrophil: { value: "", unit: "%" },
         eosinophil: { value: "", unit: "%" },
         lymphocyte: { value: "", unit: "%" },
-       
       },
       platelets:{value:"",unit:"cells/µL"},
 
@@ -246,6 +244,83 @@ function App() {
     </div>
   );
 
+  useEffect(() => {
+    const savedData = localStorage.getItem(patientInfo.registrationNo);
+    if (savedData) {
+      const parsedData = JSON.parse(savedData);
+      setPatientInfo(parsedData.patientInfo);
+      setInvestigations(parsedData.investigations);
+      setTreatment(parsedData.treatment);
+      setAdvice(parsedData.advice);
+      setDynamicInvestigations(parsedData.dynamicInvestigations);
+      setCustomBloodWork(parsedData.customBloodWork);
+    } else {
+      // Reset all states to their initial values
+      setPatientInfo({
+        registrationNo: patientInfo.registrationNo,
+        name: "",
+        age: "",
+        gender: "",
+        roomNo: "",
+        admitDate: "",
+        dischargeDate: "",
+        address: "",
+        clinicalSummary: "",
+        comorbidities: [],
+        comorbidityOther: "",
+        diagnosis: [],
+        diagnosisOther: "",
+      });
+      setInvestigations({
+        ultrasonography: { date: "", report: "" },
+        ivp: { date: "", report: "" },
+        ctkub: { date: "", report: "" },
+        bloodWork: {
+          date: "",
+          hemoglobin: { value: "", unit: "g/dL" },
+          whiteBloodCell: { value: "", unit: "cells/µL" },
+          wbcComponents: {
+            neutrophil: { value: "", unit: "%" },
+            eosinophil: { value: "", unit: "%" },
+            lymphocyte: { value: "", unit: "%" },
+          },
+          platelets: { value: "", unit: "cells/µL" },
+          bloodGroup: { value: "", unit: "" },
+          rhFactor: { value: "", unit: "" },
+          elisaForHiv1And2: { value: "", unit: "" },
+          elisaNonHcv: { value: "", unit: "" },
+          australianAntigen: { value: "", unit: "" },
+          bloodUrea: { value: "", unit: "mg/dL" },
+          serumCreatinine: { value: "", unit: "mg/dL" },
+          bloodSugar: { value: "", unit: "mg/dL" },
+          srPsa: { value: "", unit: "ng/mL" }
+        },
+      });
+      setTreatment({ date: "", treatment: "" });
+      setAdvice([
+        { medicine: "", timesPerDay: "", numDoses: "", days: "" },
+        { medicine: "", timesPerDay: "", numDoses: "", days: "" },
+        { medicine: "", timesPerDay: "", numDoses: "", days: "" },
+        { medicine: "", timesPerDay: "", numDoses: "", days: "" },
+      ]);
+      setDynamicInvestigations([]);
+      setCustomBloodWork([]);
+    }
+  }, [patientInfo.registrationNo]);
+
+  const handleSave = () => {
+    const dataToSave = {
+      patientInfo,
+      investigations,
+      treatment,
+      advice,
+      dynamicInvestigations,
+      customBloodWork
+    };
+    localStorage.setItem(patientInfo.registrationNo, JSON.stringify(dataToSave));
+    alert("Data saved successfully!");
+  };
+
   return (
     <div className="app-container">
       <div className="form-container">
@@ -254,6 +329,7 @@ function App() {
           <button onClick={togglePdfViewer} className="add-investigation-btn">
             {showPdfViewer ? "Hide PDF" : "Show PDF"}
           </button>
+          <button onClick={handleSave} className="save-btn">Save</button>
         </div>
 <div className="section patient-info">
   <h2>Patient Information</h2>
@@ -827,7 +903,7 @@ function App() {
             handleAdviceChange(index, "medicine", e.target.value)
           }
         />
-        <datalist id="medicationList">
+        <datalist id="medicationList"> 
         <option value="Inj Cezsal 1.5 gm IV" />
         <option value="Inj Cefobita 1.5 gm IV" />
         <option value="Inj Pipzo 4.5 gm IV with 100ml NS" />
@@ -902,6 +978,7 @@ function App() {
             }
           </PDFDownloadLink>
           <button onClick={togglePdfViewer}>Preview PDF</button>
+          <button onClick={handleSave} className="save-btn">Save</button>
         </div>
       </div>
       
