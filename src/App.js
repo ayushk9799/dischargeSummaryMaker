@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import DischargeSummaryPDF from "./PDF";
-import {PDFViewer,PDFDownloadLink} from '@react-pdf/renderer'
+import { PDFViewer, PDFDownloadLink } from "@react-pdf/renderer";
+import { db } from "./firebase";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 
 const MultiSelect = ({ options, value, onChange, onOtherSelected }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,13 +12,15 @@ const MultiSelect = ({ options, value, onChange, onOtherSelected }) => {
 
   const handleOptionClick = (option) => {
     let newValue;
-    if (option === 'other') {
-      newValue = value.includes(option) ? value.filter(item => item !== option) : [...value, option];
+    if (option === "other") {
+      newValue = value.includes(option)
+        ? value.filter((item) => item !== option)
+        : [...value, option];
       setIsOpen(false);
       onOtherSelected();
     } else {
       newValue = value.includes(option)
-        ? value.filter(item => item !== option)
+        ? value.filter((item) => item !== option)
         : [...value, option];
     }
     onChange(newValue);
@@ -25,14 +29,14 @@ const MultiSelect = ({ options, value, onChange, onOtherSelected }) => {
   return (
     <div className="multi-select">
       <div className="select-header" onClick={handleToggle}>
-        {value.length ? value.join(', ') : 'Select options'}
+        {value.length ? value.join(", ") : "Select options"}
       </div>
       {isOpen && (
         <div className="options-container">
-          {options.map(option => (
+          {options.map((option) => (
             <div
               key={option}
-              className={`option ${value.includes(option) ? 'selected' : ''}`}
+              className={`option ${value.includes(option) ? "selected" : ""}`}
               onClick={() => handleOptionClick(option)}
             >
               {option}
@@ -88,7 +92,7 @@ function App() {
         eosinophil: { value: "", unit: "%" },
         lymphocyte: { value: "", unit: "%" },
       },
-      platelets:{value:"",unit:"cells/µL"},
+      platelets: { value: "", unit: "cells/µL" },
 
       bloodGroup: { value: "", unit: "" },
       rhFactor: { value: "", unit: "" },
@@ -98,7 +102,7 @@ function App() {
       bloodUrea: { value: "", unit: "mg/dL" },
       serumCreatinine: { value: "", unit: "mg/dL" },
       bloodSugar: { value: "", unit: "mg/dL" },
-      srPsa:{value:"",unit:"ng/mL"}
+      srPsa: { value: "", unit: "ng/mL" },
     },
   });
 
@@ -108,6 +112,8 @@ function App() {
     date: "",
     treatment: "",
   });
+  const [searchRegistrationNo, setSearchRegistrationNo] = useState("");
+
   const handleAdviceChange = (index, field, value) => {
     const newAdvice = [...advice];
     newAdvice[index][field] = value;
@@ -122,34 +128,45 @@ function App() {
   };
   const [showPdfViewer, setShowPdfViewer] = useState(false);
 
-
   const togglePdfViewer = () => {
     setShowPdfViewer(!showPdfViewer);
   };
-  
+
   const handlePatientInfoChange = (e) => {
     const { name, value } = e.target;
-    setPatientInfo(prevInfo => ({
+    setPatientInfo((prevInfo) => ({
       ...prevInfo,
       [name]: value,
-      ...(name === 'diagnosis' && value !== 'other' ? { diagnosisOther: "" } : {}),
-      ...(name === 'comorbidities' ? { comorbidities: Array.from(e.target.selectedOptions, option => option.value) } : {})
+      ...(name === "diagnosis" && value !== "other"
+        ? { diagnosisOther: "" }
+        : {}),
+      ...(name === "comorbidities"
+        ? {
+            comorbidities: Array.from(
+              e.target.selectedOptions,
+              (option) => option.value
+            ),
+          }
+        : {}),
     }));
   };
 
   const handleComorbidityChange = (e) => {
     const { value, checked } = e.target;
-    setPatientInfo(prevInfo => {
+    setPatientInfo((prevInfo) => {
       let updatedComorbidities = [...prevInfo.comorbidities];
       if (checked) {
         updatedComorbidities.push(value);
       } else {
-        updatedComorbidities = updatedComorbidities.filter(item => item !== value);
+        updatedComorbidities = updatedComorbidities.filter(
+          (item) => item !== value
+        );
       }
       return {
         ...prevInfo,
         comorbidities: updatedComorbidities,
-        comorbidityOther: value === 'Other' && !checked ? '' : prevInfo.comorbidityOther
+        comorbidityOther:
+          value === "Other" && !checked ? "" : prevInfo.comorbidityOther,
       };
     });
   };
@@ -210,7 +227,7 @@ function App() {
     };
     setDynamicInvestigations(updatedDynamicInvestigations);
   };
-  console.log(dynamicInvestigations)
+  console.log(dynamicInvestigations);
   const handleCustomBloodWorkChange = (index, field, value) => {
     const updatedCustomBloodWork = [...customBloodWork];
     updatedCustomBloodWork[index][field] = value;
@@ -244,492 +261,420 @@ function App() {
     </div>
   );
 
-  useEffect(() => {
-    const savedData = localStorage.getItem(patientInfo.registrationNo);
-    if (savedData) {
-      const parsedData = JSON.parse(savedData);
-      setPatientInfo(parsedData.patientInfo);
-      setInvestigations(parsedData.investigations);
-      setTreatment(parsedData.treatment);
-      setAdvice(parsedData.advice);
-      setDynamicInvestigations(parsedData.dynamicInvestigations);
-      setCustomBloodWork(parsedData.customBloodWork);
-    } else {
-      // Reset all states to their initial values
-      setPatientInfo({
-        registrationNo: patientInfo.registrationNo,
-        name: "",
-        age: "",
-        gender: "",
-        roomNo: "",
-        admitDate: "",
-        dischargeDate: "",
-        address: "",
-        clinicalSummary: "",
-        comorbidities: [],
-        comorbidityOther: "",
-        diagnosis: [],
-        diagnosisOther: "",
-      });
-      setInvestigations({
-        ultrasonography: { date: "", report: "" },
-        ivp: { date: "", report: "" },
-        ctkub: { date: "", report: "" },
-        bloodWork: {
-          date: "",
-          hemoglobin: { value: "", unit: "g/dL" },
-          whiteBloodCell: { value: "", unit: "cells/µL" },
-          wbcComponents: {
-            neutrophil: { value: "", unit: "%" },
-            eosinophil: { value: "", unit: "%" },
-            lymphocyte: { value: "", unit: "%" },
-          },
-          platelets: { value: "", unit: "cells/µL" },
-          bloodGroup: { value: "", unit: "" },
-          rhFactor: { value: "", unit: "" },
-          elisaForHiv1And2: { value: "", unit: "" },
-          elisaNonHcv: { value: "", unit: "" },
-          australianAntigen: { value: "", unit: "" },
-          bloodUrea: { value: "", unit: "mg/dL" },
-          serumCreatinine: { value: "", unit: "mg/dL" },
-          bloodSugar: { value: "", unit: "mg/dL" },
-          srPsa: { value: "", unit: "ng/mL" }
-        },
-      });
-      setTreatment({ date: "", treatment: "" });
-      setAdvice([
-        { medicine: "", timesPerDay: "", numDoses: "", days: "" },
-        { medicine: "", timesPerDay: "", numDoses: "", days: "" },
-        { medicine: "", timesPerDay: "", numDoses: "", days: "" },
-        { medicine: "", timesPerDay: "", numDoses: "", days: "" },
-      ]);
-      setDynamicInvestigations([]);
-      setCustomBloodWork([]);
-    }
-  }, [patientInfo.registrationNo]);
+  const handleSearchChange = (e) => {
+    setSearchRegistrationNo(e.target.value);
+  };
 
-  const handleSave = () => {
+  const handleSearch = async () => {
+    if (searchRegistrationNo) {
+      const docRef = doc(db, "patients", searchRegistrationNo);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setPatientInfo({
+          ...data.patientInfo,
+          registrationNo: searchRegistrationNo,
+        });
+        setInvestigations(data.investigations);
+        setTreatment(data.treatment);
+        setAdvice(data.advice);
+        setDynamicInvestigations(data.dynamicInvestigations);
+        setCustomBloodWork(data.customBloodWork);
+      } else {
+        alert("No patient found with this registration number.");
+        // Reset all states to their initial values
+        setPatientInfo({
+          registrationNo: searchRegistrationNo,
+          name: "",
+          age: "",
+          gender: "",
+          roomNo: "",
+          admitDate: "",
+          dischargeDate: "",
+          address: "",
+          clinicalSummary: "",
+          comorbidities: [],
+          comorbidityOther: "",
+          diagnosis: [],
+          diagnosisOther: "",
+        });
+        setInvestigations({
+          ultrasonography: { date: "", report: "" },
+          ivp: { date: "", report: "" },
+          ctkub: { date: "", report: "" },
+          bloodWork: {
+            date: "",
+            hemoglobin: { value: "", unit: "g/dL" },
+            whiteBloodCell: { value: "", unit: "cells/µL" },
+            wbcComponents: {
+              neutrophil: { value: "", unit: "%" },
+              eosinophil: { value: "", unit: "%" },
+              lymphocyte: { value: "", unit: "%" },
+            },
+            platelets: { value: "", unit: "cells/µL" },
+            bloodGroup: { value: "", unit: "" },
+            rhFactor: { value: "", unit: "" },
+            elisaForHiv1And2: { value: "", unit: "" },
+            elisaNonHcv: { value: "", unit: "" },
+            australianAntigen: { value: "", unit: "" },
+            bloodUrea: { value: "", unit: "mg/dL" },
+            serumCreatinine: { value: "", unit: "mg/dL" },
+            bloodSugar: { value: "", unit: "mg/dL" },
+            srPsa: { value: "", unit: "ng/mL" },
+          },
+        });
+        setTreatment({ date: "", treatment: "" });
+        setAdvice([
+          { medicine: "", timesPerDay: "", numDoses: "", days: "" },
+          { medicine: "", timesPerDay: "", numDoses: "", days: "" },
+          { medicine: "", timesPerDay: "", numDoses: "", days: "" },
+          { medicine: "", timesPerDay: "", numDoses: "", days: "" },
+        ]);
+        setDynamicInvestigations([]);
+        setCustomBloodWork([]);
+      }
+    }
+  };
+
+  const handleSave = async () => {
     const dataToSave = {
       patientInfo,
       investigations,
       treatment,
       advice,
       dynamicInvestigations,
-      customBloodWork
+      customBloodWork,
     };
-    localStorage.setItem(patientInfo.registrationNo, JSON.stringify(dataToSave));
-    alert("Data saved successfully!");
+
+    try {
+      await setDoc(doc(db, "patients", patientInfo.registrationNo), dataToSave);
+      alert("Data saved successfully!");
+    } catch (error) {
+      console.error("Error saving data: ", error);
+      alert("Error saving data. Please try again.");
+    }
   };
 
   return (
     <div className="app-container">
       <div className="form-container">
-      <div className="title-container">
+        <div className="title-container">
           <h1>Discharge Summary Generator</h1>
           <button onClick={togglePdfViewer} className="add-investigation-btn">
             {showPdfViewer ? "Hide PDF" : "Show PDF"}
           </button>
-          <button onClick={handleSave} className="save-btn">Save</button>
+          <button onClick={handleSave} className="save-btn">
+            Save
+          </button>
         </div>
-<div className="section patient-info">
-  <h2>Patient Information</h2>
-  <div className="patient-info-grid">
-    <div className="input-group">
-      <label htmlFor="patientId">Registration No:</label>
-      <input
-        id="patientId"
-        name="registrationNo"
-        type="text"
-        value={patientInfo.registrationNo}
-        onChange={handlePatientInfoChange}
-      />
-    </div>
-    <div className="input-group">
-      <label htmlFor="name">Name:</label>
-      <input
-        id="name"
-        name="name"
-        type="text"
-        value={patientInfo.name}
-        onChange={handlePatientInfoChange}
-      />
-    </div>
-    <div className="input-group">
-      <label htmlFor="age">Age:</label>
-      <input
-        id="age"
-        name="age"
-        type="text"
-        value={patientInfo.age}
-        onChange={handlePatientInfoChange}
-      />
-    </div>
-    <div className="input-group">
-      <label htmlFor="gender">Gender:</label>
-      <select
-        id="gender"
-        name="gender"
-        value={patientInfo.gender}
-        onChange={handlePatientInfoChange}
-      >
-        <option value="">Select gender</option>
-        <option value="Male">Male</option>
-        <option value="Female">Female</option>
-        <option value="Other">Other</option>
-      </select>
-    </div>
-    <div className="input-group">
-      <label htmlFor="roomNo">Room No:</label>
-      <select
-        id="roomNo"
-        name="roomNo"
-        value={patientInfo.roomNo}
-        onChange={handlePatientInfoChange}
-      >
-        <option value="">Select room</option>
-        {[...Array(13)].map((_, index) => (
-          <option key={index + 1} value={index + 1}>
-            {index + 1}
-          </option>
-        ))}
-      </select>
-    </div>
-    <div className="input-group">
-      <label htmlFor="admitDate">Admit Date:</label>
-      <input
-        id="admitDate"
-        name="admitDate"
-        type="date"
-        value={patientInfo.admitDate}
-        onChange={handlePatientInfoChange}
-      />
-    </div>
-    <div className="input-group">
-      <label htmlFor="dischargeDate">Discharge Date:</label>
-      <input
-        id="dischargeDate"
-        name="dischargeDate"
-        type="date"
-        value={patientInfo.dischargeDate}
-        onChange={handlePatientInfoChange}
-      />
-    </div>
-  </div>
-  <div className="input-group full-width">
-    <label htmlFor="address">Address:</label>
-    <textarea
-      id="address"
-      name="address"
-      value={patientInfo.address}
-      onChange={handlePatientInfoChange}
-    />
-  </div>
- 
-  <div className="input-group full-width">
-    <label htmlFor="diagnosis">Diagnosis:</label>
-    <MultiSelect
-      options={[
-        "Prostatomegaly", "Right Renal Stone", "Left Renal Stone",
-        "Right Upper ureteric stone", "Left Upper ureteric stone",
-        "Right lower ureteric stone", "Left lower ureteric stone",
-        "Prostatomegaly + Bladder stone", "Gall bladder stone",
-        "Right inguinal hernia", "Left Inguinal Hernia", "Bladder Stone",
-        "Urethral Stricture", "Incisional Hernia",
-        "Right Pyeloureteric Junction Obstruction",
-        "Left Pyeloureteric Junction obstruction", "Hypospadias",
-        "Penile Fracture", "Priapism", "Posterior Urethral", "other"
-      ]}
-      value={patientInfo.diagnosis}
-      onChange={(newDiagnosis) => {
-        setPatientInfo(prevInfo => ({
-          ...prevInfo,
-          diagnosis: newDiagnosis,
-          diagnosisOther: newDiagnosis.includes('other') ? prevInfo.diagnosisOther : ''
-        }));
-      }}
-      onOtherSelected={() => {}}
-    />
-    {patientInfo.diagnosis.includes("other") && (
-      <div className="input-group full-width">
-        <label htmlFor="diagnosisOther">Other Diagnosis:</label>
-        <input
-          id="diagnosisOther"
-          name="diagnosisOther"
-          type="text"
-          value={patientInfo.diagnosisOther}
-          onChange={handlePatientInfoChange}
-          placeholder="Enter custom diagnosis"
-        />
-      </div>
-    )}
-  </div>
-  <div className="input-group full-width">
-    <label htmlFor="clinicalSummary">Clinical Summary:</label>
-    <textarea
-      id="clinicalSummary"
-      name="clinicalSummary"
-      value={patientInfo.clinicalSummary}
-      onChange={handlePatientInfoChange}
-    />
-  </div>
-
-  <div className="input-group full-width">
-    <label>Comorbidities:</label>
-    <div className="checkbox-group">
-      {['Diabetes', 'Hypertension', 'COPD', 'CAD', 'CKD', 'Other'].map((option) => (
-        <label key={option} className="checkbox-label">
-          <input
-            type="checkbox"
-            value={option}
-            checked={patientInfo.comorbidities.includes(option)}
-            onChange={handleComorbidityChange}
-          />
-          {option}
-        </label>
-      ))}
-    </div>
-  </div>
-
-  {patientInfo.comorbidities.includes("Other") && (
-    <div className="input-group full-width">
-      <label htmlFor="comorbidityOther">Other Comorbidities:</label>
-      <input
-        id="comorbidityOther"
-        name="comorbidityOther"
-        type="text"
-        value={patientInfo.comorbidityOther}
-        onChange={handlePatientInfoChange}
-        placeholder="Enter other comorbidities"
-      />
-    </div>
-  )}
-</div>
-
-<div className="section investigations">
-  <h2>Investigations</h2>
-
-  <div className="subsection ultrasonography">
-    <h3>Ultrasonography Whole Abdomen</h3>
-    <div className="input-group">
-      <label htmlFor="ultrasonographyDate">Date:</label>
-      <input
-        id="ultrasonographyDate"
-        type="date"
-        value={investigations.ultrasonography.date}
-        onChange={(e) =>
-          handleInvestigationsChange(
-            "ultrasonography",
-            "date",
-            e.target.value
-          )
-        }
-      />
-    </div>
-    <div className="input-group full-width">
-      <label htmlFor="ultrasonographyReport">Report:</label>
-      <textarea
-        id="ultrasonographyReport"
-        value={investigations.ultrasonography.report}
-        onChange={(e) =>
-          handleInvestigationsChange(
-            "ultrasonography",
-            "report",
-            e.target.value
-          )
-        }
-      />
-    </div>
-  </div>
-
-  <div className="subsection ivp">
-    <h3>IVP</h3>
-    <div className="input-group">
-      <label htmlFor="ivpDate">Date:</label>
-      <input
-        id="ivpDate"
-        type="date"
-        value={investigations.ivp.date}
-        onChange={(e) =>
-          handleInvestigationsChange("ivp", "date", e.target.value)
-        }
-      />
-    </div>
-    <div className="input-group full-width">
-      <label htmlFor="ivpReport">Report:</label>
-      <textarea
-        id="ivpReport"
-        value={investigations.ivp.report}
-        onChange={(e) =>
-          handleInvestigationsChange("ivp", "report", e.target.value)
-        }
-      />
-    </div>
-  </div>
-  <div className="subsection ctkub">
-    <h3>CT KUB</h3>
-    <div className="input-group">
-      <label htmlFor="ctkubDate">Date:</label>
-      <input
-        id="ctkub"
-        type="date"
-        value={investigations.ctkub.date}
-        onChange={(e) =>
-          handleInvestigationsChange("ctkub", "date", e.target.value)
-        }
-      />
-    </div>
-    <div className="input-group full-width">
-      <label htmlFor="ctkub">Report:</label>
-      <textarea
-        id="ctkubreport"
-        value={investigations.ctkub.report}
-        onChange={(e) =>
-          handleInvestigationsChange("ctkub", "report", e.target.value)
-        }
-      />
-    </div>
-  </div>
-  <div className="subsection blood-work">
-    <h3>Blood Report</h3>
-    <div className="input-group">
-      <label htmlFor="bloodWorkDate">Date:</label>
-      <input
-        id="bloodWorkDate"
-        type="date"
-        value={investigations.bloodWork.date}
-        onChange={(e) =>
-          handleInvestigationsChange("bloodWork", "date", e.target.value)
-        }
-      />
-    </div>
-    <div className="input-group">
-      <label htmlFor="whiteBloodCell">White Blood Cell Count:</label>
-      <input
-        id="whiteBloodCell-value"
-        type="text"
-        value={investigations.bloodWork.whiteBloodCell.value}
-        onChange={(e) =>
-          handleInvestigationsChange(
-            "bloodWork",
-            "whiteBloodCell",
-            e.target.value,
-            null,
-            "value"
-          )
-        }
-      />
-      <input
-        id="whiteBloodCell-unit"
-        type="text"
-        value={investigations.bloodWork.whiteBloodCell.unit}
-        onChange={(e) =>
-          handleInvestigationsChange(
-            "bloodWork",
-            "whiteBloodCell",
-            e.target.value,
-            null,
-            "unit"
-          )
-        }
-        className="unit-input"
-      />
-    </div>
-    <div className="wbc-components">
-      {Object.entries(investigations.bloodWork.wbcComponents).map(
-        ([key, { value, unit }]) => (
-          <div className="input-group" key={key}>
-            <label htmlFor={key}>
-              {key
-                .replace(/([A-Z0-9])/g, " $1")
-                .replace(/^./, (str) => str.toUpperCase())}
-              :
-            </label>
-            <input
-              id={`${key}-value`}
-              type="text"
-              value={value}
-              onChange={(e) =>
-                handleInvestigationsChange(
-                  "bloodWork",
-                  "wbcComponents",
-                  e.target.value,
-                  key,
-                  "value"
-                )
-              }
-            />
-            <input
-              id={`${key}-unit`}
-              type="text"
-              value={unit}
-              onChange={(e) =>
-                handleInvestigationsChange(
-                  "bloodWork",
-                  "wbcComponents",
-                  e.target.value,
-                  key,
-                  "unit"
-                )
-              }
-              className="unit-input"
+        <div className="section patient-info">
+          <h2>Patient Information</h2>
+          <div className="patient-info-grid">
+            <div className="input-group search-group">
+              <label htmlFor="patientId">Registration No:</label>
+              <div className="search-input-container">
+                <input
+                  id="patientId"
+                  name="registrationNo"
+                  type="text"
+                  value={searchRegistrationNo}
+                  onChange={handleSearchChange}
+                  placeholder="Enter registration number"
+                />
+                <button onClick={handleSearch} className="search-btn">
+                  <i className="fas fa-search"></i>
+                </button>
+              </div>
+            </div>
+            <div className="input-group">
+              <label htmlFor="name">Name:</label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                value={patientInfo.name}
+                onChange={handlePatientInfoChange}
+              />
+            </div>
+            <div className="input-group">
+              <label htmlFor="age">Age:</label>
+              <input
+                id="age"
+                name="age"
+                type="text"
+                value={patientInfo.age}
+                onChange={handlePatientInfoChange}
+              />
+            </div>
+            <div className="input-group">
+              <label htmlFor="gender">Gender:</label>
+              <select
+                id="gender"
+                name="gender"
+                value={patientInfo.gender}
+                onChange={handlePatientInfoChange}
+              >
+                <option value="">Select gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div className="input-group">
+              <label htmlFor="roomNo">Room No:</label>
+              <select
+                id="roomNo"
+                name="roomNo"
+                value={patientInfo.roomNo}
+                onChange={handlePatientInfoChange}
+              >
+                <option value="">Select room</option>
+                {[...Array(13)].map((_, index) => (
+                  <option key={index + 1} value={index + 1}>
+                    {index + 1}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="input-group">
+              <label htmlFor="admitDate">Admit Date:</label>
+              <input
+                id="admitDate"
+                name="admitDate"
+                type="date"
+                value={patientInfo.admitDate}
+                onChange={handlePatientInfoChange}
+              />
+            </div>
+            <div className="input-group">
+              <label htmlFor="dischargeDate">Discharge Date:</label>
+              <input
+                id="dischargeDate"
+                name="dischargeDate"
+                type="date"
+                value={patientInfo.dischargeDate}
+                onChange={handlePatientInfoChange}
+              />
+            </div>
+          </div>
+          <div className="input-group full-width">
+            <label htmlFor="address">Address:</label>
+            <textarea
+              id="address"
+              name="address"
+              value={patientInfo.address}
+              onChange={handlePatientInfoChange}
             />
           </div>
-        )
-      )}
-    </div>
-    {Object.entries(investigations.bloodWork)
-      .filter(
-        ([key]) =>
-          key !== "wbcComponents" &&
-          key !== "whiteBloodCell" &&
-          key !== "date"
-      )
-      .map(([key, { value, unit }]) => {
-        if (
-          [
-            "elisaForHiv1And2",
-            "elisaNonHcv",
-            "australianAntigen",
-            "rhFactor",
-            "bloodGroup",
-          ].includes(key)
-        ) {
-          const options =
-            key !== "rhFactor" && key !== "bloodGroup"
-              ? ["Reactive", "Non-Reactive"]
-              : key === "rhFactor"
-              ? ["Positive", "Negative"]
-              : ["A", "B", "AB", "O"];
-          return (
-            <SelectWithOptions
-              key={key}
-              id={key}
-              name={key
-                .replace(/([A-Z0-9])/g, " $1")
-                .replace(/^./, (str) => str.toUpperCase())}
-              value={value}
-              options={options}
-              onChange={handleInvestigationsChange}
+
+          <div className="input-group full-width">
+            <label htmlFor="diagnosis">Diagnosis:</label>
+            <MultiSelect
+              options={[
+                "Prostatomegaly",
+                "Right Renal Stone",
+                "Left Renal Stone",
+                "Right Upper ureteric stone",
+                "Left Upper ureteric stone",
+                "Right lower ureteric stone",
+                "Left lower ureteric stone",
+                "Prostatomegaly + Bladder stone",
+                "Gall bladder stone",
+                "Right inguinal hernia",
+                "Left Inguinal Hernia",
+                "Bladder Stone",
+                "Urethral Stricture",
+                "Incisional Hernia",
+                "Right Pyeloureteric Junction Obstruction",
+                "Left Pyeloureteric Junction obstruction",
+                "Hypospadias",
+                "Penile Fracture",
+                "Priapism",
+                "Posterior Urethral",
+                "other",
+              ]}
+              value={patientInfo.diagnosis}
+              onChange={(newDiagnosis) => {
+                setPatientInfo((prevInfo) => ({
+                  ...prevInfo,
+                  diagnosis: newDiagnosis,
+                  diagnosisOther: newDiagnosis.includes("other")
+                    ? prevInfo.diagnosisOther
+                    : "",
+                }));
+              }}
+              onOtherSelected={() => {}}
             />
-          );
-        } else {
-          return (
-            <div className="input-group" key={key}>
-              <label htmlFor={key}>
-              {key === "srPsa" ? "Sr PSA" : 
-              key
-                .replace(/([A-Z0-9])/g, " $1")
-                .replace(/^./, (str) => str.toUpperCase())}
-                :
-              </label>
+            {patientInfo.diagnosis.includes("other") && (
+              <div className="input-group full-width">
+                <label htmlFor="diagnosisOther">Other Diagnosis:</label>
+                <input
+                  id="diagnosisOther"
+                  name="diagnosisOther"
+                  type="text"
+                  value={patientInfo.diagnosisOther}
+                  onChange={handlePatientInfoChange}
+                  placeholder="Enter custom diagnosis"
+                />
+              </div>
+            )}
+          </div>
+          <div className="input-group full-width">
+            <label htmlFor="clinicalSummary">Clinical Summary:</label>
+            <textarea
+              id="clinicalSummary"
+              name="clinicalSummary"
+              value={patientInfo.clinicalSummary}
+              onChange={handlePatientInfoChange}
+            />
+          </div>
+
+          <div className="input-group full-width">
+            <label>Comorbidities:</label>
+            <div className="checkbox-group">
+              {["Diabetes", "Hypertension", "COPD", "CAD", "CKD", "Other"].map(
+                (option) => (
+                  <label key={option} className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      value={option}
+                      checked={patientInfo.comorbidities.includes(option)}
+                      onChange={handleComorbidityChange}
+                    />
+                    {option}
+                  </label>
+                )
+              )}
+            </div>
+          </div>
+
+          {patientInfo.comorbidities.includes("Other") && (
+            <div className="input-group full-width">
+              <label htmlFor="comorbidityOther">Other Comorbidities:</label>
               <input
-                id={`${key}-value`}
+                id="comorbidityOther"
+                name="comorbidityOther"
                 type="text"
-                value={value}
+                value={patientInfo.comorbidityOther}
+                onChange={handlePatientInfoChange}
+                placeholder="Enter other comorbidities"
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="section investigations">
+          <h2>Investigations</h2>
+
+          <div className="subsection ultrasonography">
+            <h3>Ultrasonography Whole Abdomen</h3>
+            <div className="input-group">
+              <label htmlFor="ultrasonographyDate">Date:</label>
+              <input
+                id="ultrasonographyDate"
+                type="date"
+                value={investigations.ultrasonography.date}
+                onChange={(e) =>
+                  handleInvestigationsChange(
+                    "ultrasonography",
+                    "date",
+                    e.target.value
+                  )
+                }
+              />
+            </div>
+            <div className="input-group full-width">
+              <label htmlFor="ultrasonographyReport">Report:</label>
+              <textarea
+                id="ultrasonographyReport"
+                value={investigations.ultrasonography.report}
+                onChange={(e) =>
+                  handleInvestigationsChange(
+                    "ultrasonography",
+                    "report",
+                    e.target.value
+                  )
+                }
+              />
+            </div>
+          </div>
+
+          <div className="subsection ivp">
+            <h3>IVP</h3>
+            <div className="input-group">
+              <label htmlFor="ivpDate">Date:</label>
+              <input
+                id="ivpDate"
+                type="date"
+                value={investigations.ivp.date}
+                onChange={(e) =>
+                  handleInvestigationsChange("ivp", "date", e.target.value)
+                }
+              />
+            </div>
+            <div className="input-group full-width">
+              <label htmlFor="ivpReport">Report:</label>
+              <textarea
+                id="ivpReport"
+                value={investigations.ivp.report}
+                onChange={(e) =>
+                  handleInvestigationsChange("ivp", "report", e.target.value)
+                }
+              />
+            </div>
+          </div>
+          <div className="subsection ctkub">
+            <h3>CT KUB</h3>
+            <div className="input-group">
+              <label htmlFor="ctkubDate">Date:</label>
+              <input
+                id="ctkub"
+                type="date"
+                value={investigations.ctkub.date}
+                onChange={(e) =>
+                  handleInvestigationsChange("ctkub", "date", e.target.value)
+                }
+              />
+            </div>
+            <div className="input-group full-width">
+              <label htmlFor="ctkub">Report:</label>
+              <textarea
+                id="ctkubreport"
+                value={investigations.ctkub.report}
+                onChange={(e) =>
+                  handleInvestigationsChange("ctkub", "report", e.target.value)
+                }
+              />
+            </div>
+          </div>
+          <div className="subsection blood-work">
+            <h3>Blood Report</h3>
+            <div className="input-group">
+              <label htmlFor="bloodWorkDate">Date:</label>
+              <input
+                id="bloodWorkDate"
+                type="date"
+                value={investigations.bloodWork.date}
                 onChange={(e) =>
                   handleInvestigationsChange(
                     "bloodWork",
-                    key,
+                    "date",
+                    e.target.value
+                  )
+                }
+              />
+            </div>
+            <div className="input-group">
+              <label htmlFor="whiteBloodCell">White Blood Cell Count:</label>
+              <input
+                id="whiteBloodCell-value"
+                type="text"
+                value={investigations.bloodWork.whiteBloodCell.value}
+                onChange={(e) =>
+                  handleInvestigationsChange(
+                    "bloodWork",
+                    "whiteBloodCell",
                     e.target.value,
                     null,
                     "value"
@@ -737,13 +682,13 @@ function App() {
                 }
               />
               <input
-                id={`${key}-unit`}
+                id="whiteBloodCell-unit"
                 type="text"
-                value={unit}
+                value={investigations.bloodWork.whiteBloodCell.unit}
                 onChange={(e) =>
                   handleInvestigationsChange(
                     "bloodWork",
-                    key,
+                    "whiteBloodCell",
                     e.target.value,
                     null,
                     "unit"
@@ -752,217 +697,332 @@ function App() {
                 className="unit-input"
               />
             </div>
-          );
-        }
-      })}
-
-    {customBloodWork.map((param, index) => (
-      <div key={index} className="custom-blood-work-row">
-        <input
-          type="text"
-          placeholder="Parameter"
-          value={param.parameter}
-          onChange={(e) =>
-            handleCustomBloodWorkChange(
-              index,
-              "parameter",
-              e.target.value
-            )
-          }
-        />
-        <input
-          type="text"
-          placeholder="Value"
-          className="customValue"
-          value={param.value}
-          onChange={(e) =>
-            handleCustomBloodWorkChange(index, "value", e.target.value)
-          }
-        />
-        <input
-          type="text"
-          placeholder="Unit"
-          className="customUnit"
-          value={param.unit}
-          onChange={(e) =>
-            handleCustomBloodWorkChange(index, "unit", e.target.value)
-          }
-        />
-      </div>
-    ))}
-    <button
-      onClick={addCustomBloodWorkField}
-      className="add-parameter-btn"
-    >
-      + Add Blood Parameter
-    </button>
-
-    <div className="subsection dynamic-investigations">
-      <h3>Additional Investigations</h3>
-      {dynamicInvestigations.map((investigation, index) => (
-        <div key={index} className="dynamic-investigation">
-          <div className="input-group">
-            <label htmlFor={`investigation-name-${index}`}>
-              Investigation Name:
-            </label>
-            <input
-              id={`investigation-name-${index}`}
-              type="text"
-              value={investigation.name}
-              onChange={(e) =>
-                handleDynamicInvestigationChange(
-                  index,
-                  "name",
-                  e.target.value
+            <div className="wbc-components">
+              {Object.entries(investigations.bloodWork.wbcComponents).map(
+                ([key, { value, unit }]) => (
+                  <div className="input-group" key={key}>
+                    <label htmlFor={key}>
+                      {key
+                        .replace(/([A-Z0-9])/g, " $1")
+                        .replace(/^./, (str) => str.toUpperCase())}
+                      :
+                    </label>
+                    <input
+                      id={`${key}-value`}
+                      type="text"
+                      value={value}
+                      onChange={(e) =>
+                        handleInvestigationsChange(
+                          "bloodWork",
+                          "wbcComponents",
+                          e.target.value,
+                          key,
+                          "value"
+                        )
+                      }
+                    />
+                    <input
+                      id={`${key}-unit`}
+                      type="text"
+                      value={unit}
+                      onChange={(e) =>
+                        handleInvestigationsChange(
+                          "bloodWork",
+                          "wbcComponents",
+                          e.target.value,
+                          key,
+                          "unit"
+                        )
+                      }
+                      className="unit-input"
+                    />
+                  </div>
                 )
-              }
-            />
+              )}
+            </div>
+            {Object.entries(investigations.bloodWork)
+              .filter(
+                ([key]) =>
+                  key !== "wbcComponents" &&
+                  key !== "whiteBloodCell" &&
+                  key !== "date"
+              )
+              .map(([key, { value, unit }]) => {
+                if (
+                  [
+                    "elisaForHiv1And2",
+                    "elisaNonHcv",
+                    "australianAntigen",
+                    "rhFactor",
+                    "bloodGroup",
+                  ].includes(key)
+                ) {
+                  const options =
+                    key !== "rhFactor" && key !== "bloodGroup"
+                      ? ["Reactive", "Non-Reactive"]
+                      : key === "rhFactor"
+                      ? ["Positive", "Negative"]
+                      : ["A", "B", "AB", "O"];
+                  return (
+                    <SelectWithOptions
+                      key={key}
+                      id={key}
+                      name={key
+                        .replace(/([A-Z0-9])/g, " $1")
+                        .replace(/^./, (str) => str.toUpperCase())}
+                      value={value}
+                      options={options}
+                      onChange={handleInvestigationsChange}
+                    />
+                  );
+                } else {
+                  return (
+                    <div className="input-group" key={key}>
+                      <label htmlFor={key}>
+                        {key === "srPsa"
+                          ? "Sr PSA"
+                          : key
+                              .replace(/([A-Z0-9])/g, " $1")
+                              .replace(/^./, (str) => str.toUpperCase())}
+                        :
+                      </label>
+                      <input
+                        id={`${key}-value`}
+                        type="text"
+                        value={value}
+                        onChange={(e) =>
+                          handleInvestigationsChange(
+                            "bloodWork",
+                            key,
+                            e.target.value,
+                            null,
+                            "value"
+                          )
+                        }
+                      />
+                      <input
+                        id={`${key}-unit`}
+                        type="text"
+                        value={unit}
+                        onChange={(e) =>
+                          handleInvestigationsChange(
+                            "bloodWork",
+                            key,
+                            e.target.value,
+                            null,
+                            "unit"
+                          )
+                        }
+                        className="unit-input"
+                      />
+                    </div>
+                  );
+                }
+              })}
+
+            {customBloodWork.map((param, index) => (
+              <div key={index} className="custom-blood-work-row">
+                <input
+                  type="text"
+                  placeholder="Parameter"
+                  value={param.parameter}
+                  onChange={(e) =>
+                    handleCustomBloodWorkChange(
+                      index,
+                      "parameter",
+                      e.target.value
+                    )
+                  }
+                />
+                <input
+                  type="text"
+                  placeholder="Value"
+                  className="customValue"
+                  value={param.value}
+                  onChange={(e) =>
+                    handleCustomBloodWorkChange(index, "value", e.target.value)
+                  }
+                />
+                <input
+                  type="text"
+                  placeholder="Unit"
+                  className="customUnit"
+                  value={param.unit}
+                  onChange={(e) =>
+                    handleCustomBloodWorkChange(index, "unit", e.target.value)
+                  }
+                />
+              </div>
+            ))}
+            <button
+              onClick={addCustomBloodWorkField}
+              className="add-parameter-btn"
+            >
+              + Add Blood Parameter
+            </button>
+
+            <div className="subsection dynamic-investigations">
+              <h3>Additional Investigations</h3>
+              {dynamicInvestigations.map((investigation, index) => (
+                <div key={index} className="dynamic-investigation">
+                  <div className="input-group">
+                    <label htmlFor={`investigation-name-${index}`}>
+                      Investigation Name:
+                    </label>
+                    <input
+                      id={`investigation-name-${index}`}
+                      type="text"
+                      value={investigation.name}
+                      onChange={(e) =>
+                        handleDynamicInvestigationChange(
+                          index,
+                          "name",
+                          e.target.value
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label htmlFor={`investigation-date-${index}`}>Date:</label>
+                    <input
+                      id={`investigation-date-${index}`}
+                      type="date"
+                      value={investigation.date}
+                      onChange={(e) =>
+                        handleDynamicInvestigationChange(
+                          index,
+                          "date",
+                          e.target.value
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="input-group full-width">
+                    <label htmlFor={`investigation-report-${index}`}>
+                      Report:
+                    </label>
+                    <textarea
+                      id={`investigation-report-${index}`}
+                      value={investigation.report}
+                      onChange={(e) =>
+                        handleDynamicInvestigationChange(
+                          index,
+                          "report",
+                          e.target.value
+                        )
+                      }
+                    />
+                  </div>
+                </div>
+              ))}
+              <button
+                onClick={addDynamicInvestigation}
+                className="add-investigation-btn"
+              >
+                + Add Investigation Parameter
+              </button>
+            </div>
           </div>
-          <div className="input-group">
-            <label htmlFor={`investigation-date-${index}`}>Date:</label>
+        </div>
+
+        <div className="section">
+          <h2>Treatment/Surgery</h2>
+          <div className="input-group treatmentgroup">
+            <label>Date:</label>
             <input
-              id={`investigation-date-${index}`}
+              id="treatmentDate"
               type="date"
-              value={investigation.date}
+              value={treatment.date}
               onChange={(e) =>
-                handleDynamicInvestigationChange(
-                  index,
-                  "date",
-                  e.target.value
-                )
+                setTreatment({ ...treatment, date: e.target.value })
               }
             />
           </div>
-          <div className="input-group full-width">
-            <label htmlFor={`investigation-report-${index}`}>
-              Report:
-            </label>
+          <div className="input-group">
+            <label>Report:</label>
             <textarea
-              id={`investigation-report-${index}`}
-              value={investigation.report}
+              id="treatmentReport"
+              type="text"
+              value={treatment.treatment}
               onChange={(e) =>
-                handleDynamicInvestigationChange(
-                  index,
-                  "report",
-                  e.target.value
-                )
+                setTreatment({
+                  ...treatment,
+                  treatment: e.target.value,
+                })
               }
             />
           </div>
         </div>
-      ))}
-      <button
-        onClick={addDynamicInvestigation}
-        className="add-investigation-btn"
-      >
-        + Add Investigation Parameter
-      </button>
-    </div>
-  </div>
-</div>
+        <div className="section">
+          <h2>Advice</h2>
+          {advice.map((item, index) => (
+            <div key={index} className="advice-row">
+              <div className="input-group medicine">
+                <input
+                  type="text"
+                  placeholder="Medicine/Advice"
+                  value={item.medicine}
+                  list="medicationList"
+                  onChange={(e) =>
+                    handleAdviceChange(index, "medicine", e.target.value)
+                  }
+                />
+                <datalist id="medicationList">
+                  <option value="Inj Cezsal 1.5 gm IV" />
+                  <option value="Inj Cefobita 1.5 gm IV" />
+                  <option value="Inj Pipzo 4.5 gm IV with 100ml NS" />
+                  <option value="Inj Meropenem 1 gm IV with 100ml NS" />
+                  <option value="Inj Effectal S 1.125 gm IV" />
+                  <option value="Inj Amikacin 500 mg IV" />
+                  <option value="Inj Aquadal Aq IV" />
+                  <option value="Tab Levofloxacin 500 mg" />
+                  <option value="Tab Clavox 625 mg" />
+                  <option value="Tab Spaflam" />
+                  <option value="Inj Clindamycin 300 mg IV with 100ml NS" />
+                  <option value="Tab Omeprazole 20 mg" />
+                  <option value="Tab Pantaprazole 80 mg" />
+                  <option value="Tab Rabeprazole 20 mg" />
+                  <option value="Tab Hifenac P" />
+                  <option value="Inj Cefoperazone + Salbactum 1.5 gm IV" />
+                </datalist>
+              </div>
+              <div className="input-group dosage">
+                <input
+                  type="number"
+                  value={item.timesPerDay}
+                  onChange={(e) =>
+                    handleAdviceChange(index, "timesPerDay", e.target.value)
+                  }
+                />
+                <span>x</span>
+                <input
+                  type="number"
+                  value={item.numDoses}
+                  onChange={(e) =>
+                    handleAdviceChange(index, "numDoses", e.target.value)
+                  }
+                />
+                <span>-</span>
+                <input
+                  type="number"
+                  value={item.days}
+                  onChange={(e) =>
+                    handleAdviceChange(index, "days", e.target.value)
+                  }
+                />
 
-<div className="section">
-  <h2>Treatment/Surgery</h2>
-  <div className="input-group treatmentgroup">
-    <label>Date:</label>
-    <input
-      id="treatmentDate"
-      type="date"
-      value={treatment.date}
-      onChange={(e) =>
-        setTreatment({ ...treatment, date: e.target.value })
-      }
-    />
-  </div>
-  <div className="input-group">
-    <label>Report:</label>
-    <textarea
-      id="treatmentReport"
-      type="text"
-      value={treatment.treatment}
-      onChange={(e) =>
-        setTreatment({
-          ...treatment,
-           treatment: e.target.value,
-        })
-      }
-    />
-  </div>
-</div>
-<div className="section">
-  <h2>Advice</h2>
-  {advice.map((item, index) => (
-    <div key={index} className="advice-row">
-      <div className="input-group medicine">
-        <input
-          type="text"
-          placeholder="Medicine/Advice"
-          value={item.medicine}
-          list="medicationList"
-          onChange={(e) =>
-            handleAdviceChange(index, "medicine", e.target.value)
-          }
-        />
-        <datalist id="medicationList"> 
-        <option value="Inj Cezsal 1.5 gm IV" />
-        <option value="Inj Cefobita 1.5 gm IV" />
-        <option value="Inj Pipzo 4.5 gm IV with 100ml NS" />
-        <option value="Inj Meropenem 1 gm IV with 100ml NS" />
-        <option value="Inj Effectal S 1.125 gm IV"/>
-        <option value="Inj Amikacin 500 mg IV" />
-        <option value="Inj Aquadal Aq IV" />
-        <option value="Tab Levofloxacin 500 mg" />
-        <option value="Tab Clavox 625 mg" />
-        <option value="Tab Spaflam" />
-        <option value="Inj Clindamycin 300 mg IV with 100ml NS" />
-        <option value="Tab Omeprazole 20 mg" />
-        <option value="Tab Pantaprazole 80 mg" />
-        <option value="Tab Rabeprazole 20 mg" />
-        <option value="Tab Hifenac P" />
-        <option value="Inj Cefoperazone + Salbactum 1.5 gm IV" />
-         </datalist>
-      </div>
-      <div className="input-group dosage">
-        <input
-          type="number"
-          
-          value={item.timesPerDay}
-          onChange={(e) =>
-            handleAdviceChange(index, "timesPerDay", e.target.value)
-          }
-        />
-        <span>x</span>
-        <input
-          type="number"
-         
-          value={item.numDoses}
-          onChange={(e) =>
-            handleAdviceChange(index, "numDoses", e.target.value)
-          }
-        />
-        <span>-</span>
-        <input
-          type="number"
-         
-          value={item.days}
-          onChange={(e) =>
-            handleAdviceChange(index, "days", e.target.value)
-          }
-        />
-        
-        <span>days</span>
-      </div>
-      
-    </div>
-  ))}
-  <button onClick={addAdviceRow} className="add-advice-btn">
-    + Add Advice
-  </button>
-</div>
-<div className="button-container">
+                <span>days</span>
+              </div>
+            </div>
+          ))}
+          <button onClick={addAdviceRow} className="add-advice-btn">
+            + Add Advice
+          </button>
+        </div>
+        <div className="button-container">
           <PDFDownloadLink
             document={
-              <DischargeSummaryPDF 
+              <DischargeSummaryPDF
                 patientInfo={patientInfo}
                 investigations={investigations}
                 treatment={treatment}
@@ -973,20 +1033,21 @@ function App() {
             }
             fileName="discharge_summary.pdf"
           >
-            {({ blob, url, loading, error }) => 
-              loading ? 'Loading document...' : 'Generate PDF'
+            {({ blob, url, loading, error }) =>
+              loading ? "Loading document..." : "Generate PDF"
             }
           </PDFDownloadLink>
           <button onClick={togglePdfViewer}>Preview PDF</button>
-          <button onClick={handleSave} className="save-btn">Save</button>
+          <button onClick={handleSave} className="save-btn">
+            Save
+          </button>
         </div>
       </div>
-      
 
       {showPdfViewer && (
         <div className="pdf-viewer-container">
           <PDFViewer width="100%" height="100%">
-            <DischargeSummaryPDF 
+            <DischargeSummaryPDF
               patientInfo={patientInfo}
               investigations={investigations}
               treatment={treatment}
