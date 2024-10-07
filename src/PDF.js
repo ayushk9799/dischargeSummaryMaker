@@ -173,16 +173,16 @@ const renderBloodReport = (bloodWorkArray, customBloodWork) => {
       one.push([customBloods.parameter, {value: customBloods.value, unit: customBloods.unit}]);
     }
   });
-  
+  console.log(one);
+  console.log(two);
   if (two.length !== 0) {
     return (
       <View style={{display:'flex',flexDirection:"row",columnGap:50,marginLeft:10}}>
       <View style={{width:'50%'}}>{one.map(([key, value]) => ( value.value!=="" &&
           <View key={key} style={{display:"flex",flexDirection:"row",justifyContent:"space-between",}}>
             <View style={{flex:1}}>
-              <Text style={{fontSize:10,fontFamily:"Tinos"}}>{key==="srPsa"?"Sr PSA":key
-                .replace(/([A-Z0-9])/g, " $1")
-                .replace(/^./, (str) => str.toUpperCase())}</Text>
+              <Text style={{fontSize:10,fontFamily:"Tinos"}}>{key==="srPsa"?"Sr PSA":key?.replace(/([A-Z0-9])/g, " $1")
+                ?.replace(/^./, (str) => str.toUpperCase())}</Text>
             </View>
             
             <View style={{flex:1,flexDirection:"row",justifyContent:"space-between"}}>
@@ -198,8 +198,8 @@ const renderBloodReport = (bloodWorkArray, customBloodWork) => {
            <View key={key} style={{display:"flex",flexDirection:"row",justifyContent:"space-between",}}>
            <View style={{flex:1}}>
              <Text style={{fontSize:10,fontFamily:"Tinos"}}>{ key==="srPsa"?"Sr PSA":key
-               .replace(/([A-Z0-9])/g, " $1")
-               .replace(/^./, (str) => str.toUpperCase())}</Text>
+               ?.replace(/([A-Z0-9])/g, " $1")
+               ?.replace(/^./, (str) => str.toUpperCase())}</Text>
            </View>
            
            <View style={{flex:1,flexDirection:"row",justifyContent:"space-between"}}>
@@ -221,8 +221,8 @@ const renderBloodReport = (bloodWorkArray, customBloodWork) => {
          <View key={key} style={{display:"flex",flexDirection:"row",justifyContent:"space-between",marginLeft:130}}>
          <View style={{flex:1}}>
            <Text style={{fontSize:10,fontFamily:"Tinos"}}>{key==="srPsa"?"Sr PSA":key
-             .replace(/([A-Z0-9])/g, " $1")
-             .replace(/^./, (str) => str.toUpperCase())}</Text>
+             ?.replace(/([A-Z0-9])/g, " $1")
+             ?.replace(/^./, (str) => str.toUpperCase())}</Text>
          </View>
          
          <View style={{flex:1,flexDirection:"row",justifyContent:"space-between"}}>

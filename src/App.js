@@ -266,15 +266,15 @@ function App() {
   };
 
   const handleSearch = async () => {
-    if (searchRegistrationNo) {
-      const docRef = doc(db, "patients", searchRegistrationNo);
+    if (patientInfo.registrationNo) {
+      const docRef = doc(db, "patients", patientInfo.registrationNo);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
         const data = docSnap.data();
         setPatientInfo({
           ...data.patientInfo,
-          registrationNo: searchRegistrationNo,
+          
         });
         setInvestigations(data.investigations);
         setTreatment(data.treatment);
@@ -285,7 +285,7 @@ function App() {
         alert("No patient found with this registration number.");
         // Reset all states to their initial values
         setPatientInfo({
-          registrationNo: searchRegistrationNo,
+          registrationNo: patientInfo.registrationNo,
           name: "",
           age: "",
           gender: "",
@@ -356,6 +356,47 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    const uploadLocalStorageData = async () => {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        const value = localStorage.getItem(key);
+
+        try {
+          const parsedValue = JSON.parse(value);
+          if (typeof parsedValue === 'object' && parsedValue !== null && 'patientInfo' in parsedValue) {
+            const dataToSave = {
+              patientInfo: parsedValue.patientInfo,
+              investigations: parsedValue.investigations || {},
+              treatment: parsedValue.treatment || {},
+              advice: parsedValue.advice || [],
+              dynamicInvestigations: parsedValue.dynamicInvestigations || [],
+              customBloodWork: parsedValue.customBloodWork || [],
+            };
+
+            const registrationNo = parsedValue.patientInfo.registrationNo;
+            if (registrationNo) {
+              try {
+                await setDoc(doc(db, "patients", registrationNo), dataToSave);
+                console.log(`Data for patient ${registrationNo} uploaded to Firebase`);
+               
+              } catch (error) {
+                console.error(`Error uploading data for patient ${registrationNo}:`, error);
+              }
+            } else {
+              console.error(`Registration number not found for key: ${key}`);
+            }
+          }
+        } catch (error) {
+          console.error(`Error parsing data for key ${key}:`, error);
+        }
+      }
+      console.log("Finished processing local storage data");
+    };
+
+    uploadLocalStorageData();
+  }, []); // Empty dependency array ensures this runs only once on component mount
+
   return (
     <div className="app-container">
       <div className="form-container">
@@ -378,8 +419,8 @@ function App() {
                   id="patientId"
                   name="registrationNo"
                   type="text"
-                  value={searchRegistrationNo}
-                  onChange={handleSearchChange}
+                  value={patientInfo.registrationNo}
+                  onChange={handlePatientInfoChange}
                   placeholder="Enter registration number"
                 />
                 <button onClick={handleSearch} className="search-btn">
