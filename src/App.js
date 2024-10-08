@@ -689,6 +689,67 @@ function App() {
               />
             </div>
           </div>
+          <div className="subsection dynamic-investigations">
+              <h3>Additional Investigations</h3>
+              {dynamicInvestigations.map((investigation, index) => (
+                <div key={index} className="dynamic-investigation">
+                  <div className="input-group">
+                    <label htmlFor={`investigation-name-${index}`}>
+                      Investigation Name:
+                    </label>
+                    <input
+                      id={`investigation-name-${index}`}
+                      type="text"
+                      value={investigation.name}
+                      onChange={(e) =>
+                        handleDynamicInvestigationChange(
+                          index,
+                          "name",
+                          e.target.value
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label htmlFor={`investigation-date-${index}`}>Date:</label>
+                    <input
+                      id={`investigation-date-${index}`}
+                      type="date"
+                      value={investigation.date}
+                      onChange={(e) =>
+                        handleDynamicInvestigationChange(
+                          index,
+                          "date",
+                          e.target.value
+                        )
+                      }
+                    />
+                  </div>
+                  <div className="input-group full-width">
+                    <label htmlFor={`investigation-report-${index}`}>
+                      Report:
+                    </label>
+                    <textarea
+                      id={`investigation-report-${index}`}
+                      value={investigation.report}
+                      onChange={(e) =>
+                        handleDynamicInvestigationChange(
+                          index,
+                          "report",
+                          e.target.value
+                        )
+                      }
+                    />
+                  </div>
+                </div>
+              ))}
+              <button
+                onClick={addDynamicInvestigation}
+                className="add-investigation-btn"
+              >
+                + Add Investigation Parameter
+              </button>
+            </div>
           <div className="subsection blood-work">
             <h3>Blood Report</h3>
             <div className="input-group">
@@ -902,67 +963,7 @@ function App() {
               + Add Blood Parameter
             </button>
 
-            <div className="subsection dynamic-investigations">
-              <h3>Additional Investigations</h3>
-              {dynamicInvestigations.map((investigation, index) => (
-                <div key={index} className="dynamic-investigation">
-                  <div className="input-group">
-                    <label htmlFor={`investigation-name-${index}`}>
-                      Investigation Name:
-                    </label>
-                    <input
-                      id={`investigation-name-${index}`}
-                      type="text"
-                      value={investigation.name}
-                      onChange={(e) =>
-                        handleDynamicInvestigationChange(
-                          index,
-                          "name",
-                          e.target.value
-                        )
-                      }
-                    />
-                  </div>
-                  <div className="input-group">
-                    <label htmlFor={`investigation-date-${index}`}>Date:</label>
-                    <input
-                      id={`investigation-date-${index}`}
-                      type="date"
-                      value={investigation.date}
-                      onChange={(e) =>
-                        handleDynamicInvestigationChange(
-                          index,
-                          "date",
-                          e.target.value
-                        )
-                      }
-                    />
-                  </div>
-                  <div className="input-group full-width">
-                    <label htmlFor={`investigation-report-${index}`}>
-                      Report:
-                    </label>
-                    <textarea
-                      id={`investigation-report-${index}`}
-                      value={investigation.report}
-                      onChange={(e) =>
-                        handleDynamicInvestigationChange(
-                          index,
-                          "report",
-                          e.target.value
-                        )
-                      }
-                    />
-                  </div>
-                </div>
-              ))}
-              <button
-                onClick={addDynamicInvestigation}
-                className="add-investigation-btn"
-              >
-                + Add Investigation Parameter
-              </button>
-            </div>
+            
           </div>
         </div>
 
