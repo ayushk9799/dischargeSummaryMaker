@@ -57,6 +57,8 @@ function App() {
     roomNo: "",
     admitDate: "",
     dischargeDate: "",
+    admitTime: "",
+    dischargeTime: "",
     address: "",
     clinicalSummary: "",
     comorbidities: [],
@@ -274,7 +276,6 @@ function App() {
         const data = docSnap.data();
         setPatientInfo({
           ...data.patientInfo,
-          
         });
         setInvestigations(data.investigations);
         setTreatment(data.treatment);
@@ -292,6 +293,8 @@ function App() {
           roomNo: "",
           admitDate: "",
           dischargeDate: "",
+          admitTime: "",
+          dischargeTime: "",
           address: "",
           clinicalSummary: "",
           comorbidities: [],
@@ -364,7 +367,11 @@ function App() {
 
         try {
           const parsedValue = JSON.parse(value);
-          if (typeof parsedValue === 'object' && parsedValue !== null && 'patientInfo' in parsedValue) {
+          if (
+            typeof parsedValue === "object" &&
+            parsedValue !== null &&
+            "patientInfo" in parsedValue
+          ) {
             const dataToSave = {
               patientInfo: parsedValue.patientInfo,
               investigations: parsedValue.investigations || {},
@@ -378,10 +385,14 @@ function App() {
             if (registrationNo) {
               try {
                 await setDoc(doc(db, "patients", registrationNo), dataToSave);
-                console.log(`Data for patient ${registrationNo} uploaded to Firebase`);
-               
+                console.log(
+                  `Data for patient ${registrationNo} uploaded to Firebase`
+                );
               } catch (error) {
-                console.error(`Error uploading data for patient ${registrationNo}:`, error);
+                console.error(
+                  `Error uploading data for patient ${registrationNo}:`,
+                  error
+                );
               }
             } else {
               console.error(`Registration number not found for key: ${key}`);
@@ -401,7 +412,7 @@ function App() {
     <div className="app-container">
       <div className="form-container">
         <div className="title-container">
-          <h1>Discharge Summary Generator</h1>
+          <h1>Discharge Sury Generator</h1>
           <button onClick={togglePdfViewer} className="add-investigation-btn">
             {showPdfViewer ? "Hide PDF" : "Show PDF"}
           </button>
@@ -478,25 +489,49 @@ function App() {
                 ))}
               </select>
             </div>
-            <div className="input-group">
-              <label htmlFor="admitDate">Admit Date:</label>
-              <input
-                id="admitDate"
-                name="admitDate"
-                type="date"
-                value={patientInfo.admitDate}
-                onChange={handlePatientInfoChange}
-              />
+            <div className="date-time-group">
+              <div className="input-group">
+                <label htmlFor="admitDate">Admit Date:</label>
+                <input
+                  id="admitDate"
+                  name="admitDate"
+                  type="date"
+                  value={patientInfo.admitDate}
+                  onChange={handlePatientInfoChange}
+                />
+              </div>
+              <div className="input-group">
+                <label htmlFor="admitTime">Admit Time:</label>
+                <input
+                  id="admitTime"
+                  name="admitTime"
+                  type="time"
+                  value={patientInfo.admitTime}
+                  onChange={handlePatientInfoChange}
+                />
+              </div>
             </div>
-            <div className="input-group">
-              <label htmlFor="dischargeDate">Discharge Date:</label>
-              <input
-                id="dischargeDate"
-                name="dischargeDate"
-                type="date"
-                value={patientInfo.dischargeDate}
-                onChange={handlePatientInfoChange}
-              />
+            <div className="date-time-group">
+              <div className="input-group">
+                <label htmlFor="dischargeDate">Discharge Date:</label>
+                <input
+                  id="dischargeDate"
+                  name="dischargeDate"
+                  type="date"
+                  value={patientInfo.dischargeDate}
+                  onChange={handlePatientInfoChange}
+                />
+              </div>
+              <div className="input-group">
+                <label htmlFor="dischargeTime">Discharge Time:</label>
+                <input
+                  id="dischargeTime"
+                  name="dischargeTime"
+                  type="time"
+                  value={patientInfo.dischargeTime}
+                  onChange={handlePatientInfoChange}
+                />
+              </div>
             </div>
           </div>
           <div className="input-group full-width">
@@ -690,66 +725,66 @@ function App() {
             </div>
           </div>
           <div className="subsection dynamic-investigations">
-              <h3>Additional Investigations</h3>
-              {dynamicInvestigations.map((investigation, index) => (
-                <div key={index} className="dynamic-investigation">
-                  <div className="input-group">
-                    <label htmlFor={`investigation-name-${index}`}>
-                      Investigation Name:
-                    </label>
-                    <input
-                      id={`investigation-name-${index}`}
-                      type="text"
-                      value={investigation.name}
-                      onChange={(e) =>
-                        handleDynamicInvestigationChange(
-                          index,
-                          "name",
-                          e.target.value
-                        )
-                      }
-                    />
-                  </div>
-                  <div className="input-group">
-                    <label htmlFor={`investigation-date-${index}`}>Date:</label>
-                    <input
-                      id={`investigation-date-${index}`}
-                      type="date"
-                      value={investigation.date}
-                      onChange={(e) =>
-                        handleDynamicInvestigationChange(
-                          index,
-                          "date",
-                          e.target.value
-                        )
-                      }
-                    />
-                  </div>
-                  <div className="input-group full-width">
-                    <label htmlFor={`investigation-report-${index}`}>
-                      Report:
-                    </label>
-                    <textarea
-                      id={`investigation-report-${index}`}
-                      value={investigation.report}
-                      onChange={(e) =>
-                        handleDynamicInvestigationChange(
-                          index,
-                          "report",
-                          e.target.value
-                        )
-                      }
-                    />
-                  </div>
+            <h3>Additional Investigations</h3>
+            {dynamicInvestigations.map((investigation, index) => (
+              <div key={index} className="dynamic-investigation">
+                <div className="input-group">
+                  <label htmlFor={`investigation-name-${index}`}>
+                    Investigation Name:
+                  </label>
+                  <input
+                    id={`investigation-name-${index}`}
+                    type="text"
+                    value={investigation.name}
+                    onChange={(e) =>
+                      handleDynamicInvestigationChange(
+                        index,
+                        "name",
+                        e.target.value
+                      )
+                    }
+                  />
                 </div>
-              ))}
-              <button
-                onClick={addDynamicInvestigation}
-                className="add-investigation-btn"
-              >
-                + Add Investigation Parameter
-              </button>
-            </div>
+                <div className="input-group">
+                  <label htmlFor={`investigation-date-${index}`}>Date:</label>
+                  <input
+                    id={`investigation-date-${index}`}
+                    type="date"
+                    value={investigation.date}
+                    onChange={(e) =>
+                      handleDynamicInvestigationChange(
+                        index,
+                        "date",
+                        e.target.value
+                      )
+                    }
+                  />
+                </div>
+                <div className="input-group full-width">
+                  <label htmlFor={`investigation-report-${index}`}>
+                    Report:
+                  </label>
+                  <textarea
+                    id={`investigation-report-${index}`}
+                    value={investigation.report}
+                    onChange={(e) =>
+                      handleDynamicInvestigationChange(
+                        index,
+                        "report",
+                        e.target.value
+                      )
+                    }
+                  />
+                </div>
+              </div>
+            ))}
+            <button
+              onClick={addDynamicInvestigation}
+              className="add-investigation-btn"
+            >
+              + Add Investigation Parameter
+            </button>
+          </div>
           <div className="subsection blood-work">
             <h3>Blood Report</h3>
             <div className="input-group">
@@ -962,8 +997,6 @@ function App() {
             >
               + Add Blood Parameter
             </button>
-
-            
           </div>
         </div>
 

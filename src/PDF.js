@@ -19,7 +19,7 @@ Font.register({
 const styles = StyleSheet.create({
   page: {
     flexDirection: "column",
-     backgroundColor: "#ffffff",
+    backgroundColor: "#ffffff",
     paddingHorizontal: 30,
     paddingTop: 10,
   },
@@ -157,7 +157,7 @@ const renderBloodReport = (bloodWorkArray, customBloodWork) => {
         }
       });
     } else {
-      if(value.value !== "") {
+      if (value.value !== "") {
         if (one.length < 9) {
           one.push([key, value]);
         } else {
@@ -167,73 +167,165 @@ const renderBloodReport = (bloodWorkArray, customBloodWork) => {
     }
   });
   customBloodWork.forEach((customBloods) => {
-    if(two.length !== 0) {
-      two.push([customBloods.parameter, {value: customBloods.value, unit: customBloods.unit}]);
+    if (two.length !== 0) {
+      two.push([
+        customBloods.parameter,
+        { value: customBloods.value, unit: customBloods.unit },
+      ]);
     } else {
-      one.push([customBloods.parameter, {value: customBloods.value, unit: customBloods.unit}]);
+      one.push([
+        customBloods.parameter,
+        { value: customBloods.value, unit: customBloods.unit },
+      ]);
     }
   });
   console.log(one);
   console.log(two);
   if (two.length !== 0) {
     return (
-      <View style={{display:'flex',flexDirection:"row",columnGap:50,marginLeft:10}}>
-      <View style={{width:'50%'}}>{one.map(([key, value]) => ( value.value!=="" &&
-          <View key={key} style={{display:"flex",flexDirection:"row",justifyContent:"space-between",}}>
-            <View style={{flex:1}}>
-              <Text style={{fontSize:10,fontFamily:"Tinos"}}>{key==="srPsa"?"Sr PSA":key?.replace(/([A-Z0-9])/g, " $1")
-                ?.replace(/^./, (str) => str.toUpperCase())}</Text>
-            </View>
-            
-            <View style={{flex:1,flexDirection:"row",justifyContent:"space-between"}}>
-              <Text style={{fontSize:10,fontFamily:"Tinos",textIndent:5}}>{value.value}</Text>
-              <Text style={{fontSize:10,fontFamily:"Tinos",}}>
-                 {value.unit}
-              </Text>
-            </View>
-          </View>
-        ))}</View> 
-        <View style={{width:'50%'}}>
-        {two.map(([key, value]) => ( value.value!=="" &&
-           <View key={key} style={{display:"flex",flexDirection:"row",justifyContent:"space-between",}}>
-           <View style={{flex:1}}>
-             <Text style={{fontSize:10,fontFamily:"Tinos"}}>{ key==="srPsa"?"Sr PSA":key
-               ?.replace(/([A-Z0-9])/g, " $1")
-               ?.replace(/^./, (str) => str.toUpperCase())}</Text>
-           </View>
-           
-           <View style={{flex:1,flexDirection:"row",justifyContent:"space-between"}}>
-             <Text style={{fontSize:10,fontFamily:"Tinos",textIndent:5}}>{value.value}</Text>
-             <Text style={{fontSize:10,fontFamily:"Tinos",}}>
-                {value.unit}
-             </Text>
-           </View>
-         </View>
-        ))}
+      <View
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          columnGap: 50,
+          marginLeft: 10,
+        }}
+      >
+        <View style={{ width: "50%" }}>
+          {one.map(
+            ([key, value]) =>
+              value.value !== "" && (
+                <View
+                  key={key}
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 10, fontFamily: "Tinos" }}>
+                      {key === "srPsa"
+                        ? "Sr PSA"
+                        : key
+                            ?.replace(/([A-Z0-9])/g, " $1")
+                            ?.replace(/^./, (str) => str.toUpperCase())}
+                    </Text>
+                  </View>
+
+                  <View
+                    style={{
+                      flex: 1,
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 10,
+                        fontFamily: "Tinos",
+                        textIndent: 5,
+                      }}
+                    >
+                      {value.value}
+                    </Text>
+                    <Text style={{ fontSize: 10, fontFamily: "Tinos" }}>
+                      {value.unit}
+                    </Text>
+                  </View>
+                </View>
+              )
+          )}
         </View>
-       
+        <View style={{ width: "50%" }}>
+          {two.map(
+            ([key, value]) =>
+              value.value !== "" && (
+                <View
+                  key={key}
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 10, fontFamily: "Tinos" }}>
+                      {key === "srPsa"
+                        ? "Sr PSA"
+                        : key
+                            ?.replace(/([A-Z0-9])/g, " $1")
+                            ?.replace(/^./, (str) => str.toUpperCase())}
+                    </Text>
+                  </View>
+
+                  <View
+                    style={{
+                      flex: 1,
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 10,
+                        fontFamily: "Tinos",
+                        textIndent: 5,
+                      }}
+                    >
+                      {value.value}
+                    </Text>
+                    <Text style={{ fontSize: 10, fontFamily: "Tinos" }}>
+                      {value.unit}
+                    </Text>
+                  </View>
+                </View>
+              )
+          )}
+        </View>
       </View>
     );
   } else {
     return (
       <View>
         {one.map(([key, value]) => (
-         <View key={key} style={{display:"flex",flexDirection:"row",justifyContent:"space-between",marginLeft:130}}>
-         <View style={{flex:1}}>
-           <Text style={{fontSize:10,fontFamily:"Tinos"}}>{key==="srPsa"?"Sr PSA":key
-             ?.replace(/([A-Z0-9])/g, " $1")
-             ?.replace(/^./, (str) => str.toUpperCase())}</Text>
-         </View>
-         
-         <View style={{flex:1,flexDirection:"row",justifyContent:"space-between"}}>
-           <Text style={{fontSize:10,fontFamily:"Tinos",textIndent:5}}>{value.value}</Text>
-           <Text style={{fontSize:10,fontFamily:"Tinos",}}>
-              {value.unit}
-           </Text>
-         </View>
-       </View>
+          <View
+            key={key}
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
+              marginLeft: 130,
+            }}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 10, fontFamily: "Tinos" }}>
+                {key === "srPsa"
+                  ? "Sr PSA"
+                  : key
+                      ?.replace(/([A-Z0-9])/g, " $1")
+                      ?.replace(/^./, (str) => str.toUpperCase())}
+              </Text>
+            </View>
+
+            <View
+              style={{
+                flex: 1,
+                flexDirection: "row",
+                justifyContent: "space-between",
+              }}
+            >
+              <Text
+                style={{ fontSize: 10, fontFamily: "Tinos", textIndent: 5 }}
+              >
+                {value.value}
+              </Text>
+              <Text style={{ fontSize: 10, fontFamily: "Tinos" }}>
+                {value.unit}
+              </Text>
+            </View>
+          </View>
         ))}
-       
       </View>
     );
   }
@@ -281,20 +373,34 @@ const DischargeSummaryPDF = ({
   treatment,
   advice,
   dynamicInvestigations,
-  customBloodWork
+  customBloodWork,
 }) => {
-  console.log(patientInfo)
-  console.log(advice)
+  console.log(patientInfo);
+  console.log(advice);
   const formatDiagnosis = () => {
-    const mainDiagnoses = patientInfo.diagnosis.filter(d => d !== 'other');
-    const otherDiagnosis = patientInfo.diagnosisOther ? [patientInfo.diagnosisOther] : [];
+    const mainDiagnoses = patientInfo.diagnosis.filter((d) => d !== "other");
+    const otherDiagnosis = patientInfo.diagnosisOther
+      ? [patientInfo.diagnosisOther]
+      : [];
     const allDiagnoses = [...mainDiagnoses, ...otherDiagnosis];
-    
-    if (allDiagnoses.length === 0) return '';
+
+    if (allDiagnoses.length === 0) return "";
     if (allDiagnoses.length === 1) return allDiagnoses[0];
-    if (allDiagnoses.length === 2) return allDiagnoses.join(' and ');
-    return allDiagnoses.slice(0, -1).join(', ') + ', and ' + allDiagnoses.slice(-1);
+    if (allDiagnoses.length === 2) return allDiagnoses.join(" and ");
+    return (
+      allDiagnoses.slice(0, -1).join(", ") + ", and " + allDiagnoses.slice(-1)
+    );
   };
+
+  const formatTime = (timeString) => {
+    if (!timeString) return "";
+    const [hour, minute] = timeString.split(":");
+    const h = parseInt(hour, 10);
+    const ampm = h >= 12 ? "PM" : "AM";
+    const formattedHour = h % 12 === 0 ? 12 : h % 12;
+    return ` AT ${formattedHour}:${minute} ${ampm}`;
+  };
+  console.log(patientInfo);
 
   return (
     <Document>
@@ -340,11 +446,13 @@ const DischargeSummaryPDF = ({
             <View style={styles.patientInfoItem}>
               <Text style={styles.text}>
                 DOA: {patientInfo.admitDate.split("-").reverse().join("-")}
+                {formatTime(patientInfo.admitTime)}
               </Text>
             </View>
             <View style={styles.patientInfoItem}>
               <Text style={styles.text}>
                 DOD: {patientInfo.dischargeDate.split("-").reverse().join("-")}
+                {formatTime(patientInfo.dischargeTime)}
               </Text>
             </View>
             <View style={styles.patientInfoItem}>
@@ -367,9 +475,7 @@ const DischargeSummaryPDF = ({
               <Text style={styles.sectionTitle}>DIAGNOSIS:</Text>
             </View>
             <View>
-              <Text style={styles.text}>
-                {formatDiagnosis()}
-              </Text>
+              <Text style={styles.text}>{formatDiagnosis()}</Text>
             </View>
           </View>
         </View>
@@ -383,11 +489,14 @@ const DischargeSummaryPDF = ({
             <View>
               <Text style={styles.text}>
                 {patientInfo.clinicalSummary}
-                {patientInfo.comorbidities.length > 0 && (
-                  `, ${patientInfo.comorbidities.filter((value)=>value!=="Other").join(", ")}${
-                    patientInfo.comorbidities.includes("Other") ? `, ${patientInfo.comorbidityOther}` : ""
-                  }`
-                )}
+                {patientInfo.comorbidities.length > 0 &&
+                  `, ${patientInfo.comorbidities
+                    .filter((value) => value !== "Other")
+                    .join(", ")}${
+                    patientInfo.comorbidities.includes("Other")
+                      ? `, ${patientInfo.comorbidityOther}`
+                      : ""
+                  }`}
               </Text>
             </View>
           </View>
@@ -422,7 +531,8 @@ const DischargeSummaryPDF = ({
               {renderBloodReport(
                 Object.entries(investigations.bloodWork).filter(
                   ([key]) => key !== "date"
-                ),customBloodWork
+                ),
+                customBloodWork
               )}
             </View>
             {dynamicInvestigations.map((dinvestigations) =>
@@ -435,7 +545,9 @@ const DischargeSummaryPDF = ({
           </View>
         </View>
 
-        <View style={[styles.section, { display: "flex", flexDirection: "row" }]}>
+        <View
+          style={[styles.section, { display: "flex", flexDirection: "row" }]}
+        >
           <View style={{ width: 145 }}>
             <Text style={styles.sectionTitle}>TREATMENT:</Text>
             <Text style={styles.text}>
@@ -448,7 +560,9 @@ const DischargeSummaryPDF = ({
           </View>
         </View>
 
-        <View style={[styles.section, { display: "flex", flexDirection: "row" }]}>
+        <View
+          style={[styles.section, { display: "flex", flexDirection: "row" }]}
+        >
           <View style={{ width: 145 }}>
             <Text style={styles.sectionTitle}>ADVICE:</Text>
           </View>
@@ -464,16 +578,16 @@ const DischargeSummaryPDF = ({
                   >
                     <View style={{ flex: 1 }}>
                       <Text key={index} style={styles.text}>
-                        {index + 1}. {item.medicine} 
+                        {index + 1}. {item.medicine}
                       </Text>
-                    
                     </View>
-                    {(item.timesPerDay && item.numDoses && item.days)&& <View>
-                        <Text style={styles.text}  key={index}>
+                    {item.timesPerDay && item.numDoses && item.days && (
+                      <View>
+                        <Text style={styles.text} key={index}>
                           {item.timesPerDay} x {item.numDoses}- {item.days} days
                         </Text>
-                      </View>}
-                      
+                      </View>
+                    )}
                   </View>
                 )
             )}

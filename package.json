@@ -1,6 +1,7 @@
 {
   "name": "dischargesummary",
   "version": "0.1.0",
+  "main": "main.js",
   "private": true,
   "homepage": "https://ayushk9799.github.io/dischargeSummaryMaker",
   "dependencies": {
@@ -16,11 +17,14 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "electron-dev": "set ELECTRON_START_URL=http://localhost:3000 && electron .",
+    "dev": "concurrently \"npm start\" \"wait-on http://localhost:3000 && npm run electron-dev\"",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "gh-pages -d build",
+    "electron": "wait-on http://localhost:3000 && electron ."
   },
   "eslintConfig": {
     "extends": [
@@ -41,6 +45,7 @@
     ]
   },
   "devDependencies": {
+    "electron": "^33.0.2",
     "gh-pages": "^6.1.1"
   }
 }

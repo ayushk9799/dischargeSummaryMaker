@@ -281,6 +281,16 @@ select[multiple] {
   min-height: 100px;
   width: 100%;
 }
+.date-time-group{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+.date-time-group  label{
+  font-size: 12px;
+  font-weight: 600;
+}
 
 select[multiple] option {
   padding: 5px;
