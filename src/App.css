@@ -6,7 +6,7 @@ body {
 
 .app-container {
   display: flex;
-  height:100vh;
+  height: 100vh;
 }
 
 .form-container {
@@ -14,11 +14,10 @@ body {
   overflow-y: auto;
   padding: 20px;
   max-width: 50%;
-  
+  position: relative;
 }
-@media (max-width:600px)
-{
-  .form-container{
+@media (max-width: 600px) {
+  .form-container {
     max-width: unset;
     width: 100%;
   }
@@ -26,7 +25,6 @@ body {
 .pdf-viewer-container {
   flex: 1;
   height: 100%;
-  
 }
 h1,
 h2,
@@ -184,7 +182,8 @@ h1 {
   margin: 0 5px;
 }
 
-.add-advice-btn, .remove-advice-btn {
+.add-advice-btn,
+.remove-advice-btn {
   margin-left: 10px;
 }
 
@@ -245,7 +244,6 @@ h1 {
   .blood-work .input-group,
   .ultrasonography .input-group,
   .ivp .input-group {
-    
     align-items: flex-start;
   }
 
@@ -281,13 +279,13 @@ select[multiple] {
   min-height: 100px;
   width: 100%;
 }
-.date-time-group{
+.date-time-group {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 10px;
 }
-.date-time-group  label{
+.date-time-group label {
   font-size: 12px;
   font-weight: 600;
 }
@@ -339,7 +337,7 @@ select[multiple] option {
 .button-container button {
   margin: 10px;
   padding: 10px 20px;
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
   border: none;
   border-radius: 4px;
@@ -348,4 +346,99 @@ select[multiple] option {
 
 .button-container button:hover {
   background-color: #45a049;
+}
+
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 1.8em;
+  border-bottom: 2px solid #eee;
+}
+
+.modal-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  overflow: hidden; /* Ensures border-radius applies to children */
+}
+
+.modal-content th,
+.modal-content td {
+  border: 1px solid #e0e0e0;
+  text-align: left;
+}
+
+.modal-content th {
+  background-color: #f8f8f8;
+  font-weight: bold;
+  color: #333;
+  text-transform: uppercase;
+  font-size: 0.9em;
+}
+
+.modal-content tr:nth-child(even) {
+  background-color: #fdfdfd;
+}
+
+.modal-content tr:hover {
+  background-color: #f5f5f5;
+  cursor: pointer;
+}
+
+.modal-content button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 5px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.modal-content button:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+.modal-content button:active {
+  transform: translateY(0);
+}
+
+.modal-content button:last-child {
+  background-color: #6c757d;
+}
+
+.modal-content button:last-child:hover {
+  background-color: #5a6268;
+}
+
+.modal-content button:last-child:active {
+  transform: translateY(0);
 }
