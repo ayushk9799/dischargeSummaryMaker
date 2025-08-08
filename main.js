@@ -22,8 +22,7 @@ function createWindow() {
    
   } else {
     // In production, load the built files
-    // win.loadFile(path.join(__dirname, 'build', 'index.html'));
-    win.loadURL('http://localhost:3000');
+     win.loadFile(path.join(__dirname, 'build', 'index.html'));
     // Open DevTools if in development
    
   }

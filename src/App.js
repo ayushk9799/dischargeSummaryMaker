@@ -3,15 +3,7 @@ import "./App.css";
 import DischargeSummaryPDF from "./PDF";
 import { PDFViewer, PDFDownloadLink } from "@react-pdf/renderer";
 import { db } from "./firebase";
-import {
-  doc,
-  setDoc,
-  getDoc,
-  query,
-  collection,
-  where,
-  getDocs,
-} from "firebase/firestore";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 
 const MultiSelect = ({ options, value, onChange, onOtherSelected }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -73,7 +65,6 @@ function App() {
     comorbidityOther: "",
     diagnosis: [],
     diagnosisOther: "",
-    contactNo: "",
   });
   const [advice, setAdvice] = useState([
     { medicine: "", timesPerDay: "", numDoses: "", days: "" },
@@ -124,10 +115,6 @@ function App() {
     treatment: "",
   });
   const [searchRegistrationNo, setSearchRegistrationNo] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [showPatientSelectionModal, setShowPatientSelectionModal] =
-    useState(false);
 
   const handleAdviceChange = (index, field, value) => {
     const newAdvice = [...advice];
@@ -277,176 +264,99 @@ function App() {
   );
 
   const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
+    setSearchRegistrationNo(e.target.value);
   };
 
-  const handleSearch = async (searchType) => {
-    let currentSearchQuery = "";
-    if (searchType === "registrationNo") {
-      currentSearchQuery = patientInfo.registrationNo;
-    } else if (searchType === "name") {
-      currentSearchQuery = patientInfo.name;
-    }
-
-    if (!currentSearchQuery) {
-      alert(
-        `Please enter a ${
-          searchType === "registrationNo" ? "registration number" : "name"
-        } to search.`
-      );
-      return;
-    }
-
-    let patientDocs = [];
-
-    if (searchType === "registrationNo") {
-      const docRef = doc(db, "patients", currentSearchQuery);
+  const handleSearch = async () => {
+    if (patientInfo.registrationNo.trim() !== "") {
+      const docRef = doc(db, "patients", patientInfo.registrationNo.trim());
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
-        patientDocs.push({ id: docSnap.id, ...docSnap.data() });
-      }
-    } else if (searchType === "name") {
-      const q = collection(db, "patients");
-      const querySnapshot = await getDocs(q);
-      const regex = new RegExp(currentSearchQuery, "i"); // 'i' for case-insensitive
-      querySnapshot.forEach((doc) => {
-        const patientData = doc.data();
-        if (regex.test(patientData.patientInfo.name)) {
-          patientDocs.push({ id: doc.id, ...patientData });
-        }
-      });
-    }
-
-    if (patientDocs.length === 1) {
-      const data = patientDocs[0];
-      setPatientInfo({
-        ...data.patientInfo,
-        registrationNo: data.id,
-      });
-      setInvestigations(data.investigations);
-      setTreatment(data.treatment);
-      setAdvice(data.advice);
-      setDynamicInvestigations(data.dynamicInvestigations);
-      setCustomBloodWork(data.customBloodWork);
-      setShowPatientSelectionModal(false);
-      setSearchQuery(""); // Clear name search input after successful single result search
-    } else if (patientDocs.length > 1) {
-      setSearchResults(patientDocs);
-      setShowPatientSelectionModal(true);
-    } else {
-      alert(
-        `No patient found with this ${
-          searchType === "registrationNo" ? "registration number" : "name"
-        }.`
-      );
-      // Reset all states to their initial values, except for the current search input
-      setPatientInfo({
-        registrationNo:
-          searchType === "registrationNo" ? currentSearchQuery : "",
-        name: "",
-        age: "",
-        gender: "",
-        roomNo: "",
-        admitDate: "",
-        dischargeDate: "",
-        admitTime: "",
-        dischargeTime: "",
-        address: "",
-        clinicalSummary: "",
-        comorbidities: [],
-        comorbidityOther: "",
-        diagnosis: [],
-        diagnosisOther: "",
-        contactNo: "",
-      });
-      setInvestigations({
-        ultrasonography: { date: "", report: "" },
-        ivp: { date: "", report: "" },
-        ctkub: { date: "", report: "" },
-        bloodWork: {
-          date: "",
-          hemoglobin: { value: "", unit: "g/dL" },
-          whiteBloodCell: { value: "", unit: "cells/µL" },
-          wbcComponents: {
-            neutrophil: { value: "", unit: "%" },
-            eosinophil: { value: "", unit: "%" },
-            lymphocyte: { value: "", unit: "%" },
+        const data = docSnap.data();
+        setPatientInfo({
+          ...data.patientInfo,
+        });
+        setInvestigations(data.investigations);
+        setTreatment(data.treatment);
+        setAdvice(data.advice);
+        setDynamicInvestigations(data.dynamicInvestigations);
+        setCustomBloodWork(data.customBloodWork);
+      } else {
+        alert("No patient found with this registration number.");
+        // Reset all states to their initial values
+        setPatientInfo({
+          registrationNo: patientInfo.registrationNo,
+          name: "",
+          age: "",
+          gender: "",
+          roomNo: "",
+          admitDate: "",
+          dischargeDate: "",
+          admitTime: "",
+          dischargeTime: "",
+          address: "",
+          clinicalSummary: "",
+          comorbidities: [],
+          comorbidityOther: "",
+          diagnosis: [],
+          diagnosisOther: "",
+        });
+        setInvestigations({
+          ultrasonography: { date: "", report: "" },
+          ivp: { date: "", report: "" },
+          ctkub: { date: "", report: "" },
+          bloodWork: {
+            date: "",
+            hemoglobin: { value: "", unit: "g/dL" },
+            whiteBloodCell: { value: "", unit: "cells/µL" },
+            wbcComponents: {
+              neutrophil: { value: "", unit: "%" },
+              eosinophil: { value: "", unit: "%" },
+              lymphocyte: { value: "", unit: "%" },
+            },
+            platelets: { value: "", unit: "cells/µL" },
+            bloodGroup: { value: "", unit: "" },
+            rhFactor: { value: "", unit: "" },
+            elisaForHiv1And2: { value: "", unit: "" },
+            elisaNonHcv: { value: "", unit: "" },
+            australianAntigen: { value: "", unit: "" },
+            bloodUrea: { value: "", unit: "mg/dL" },
+            serumCreatinine: { value: "", unit: "mg/dL" },
+            bloodSugar: { value: "", unit: "mg/dL" },
+            srPsa: { value: "", unit: "ng/mL" },
           },
-          platelets: { value: "", unit: "cells/µL" },
-          bloodGroup: { value: "", unit: "" },
-          rhFactor: { value: "", unit: "" },
-          elisaForHiv1And2: { value: "", unit: "" },
-          elisaNonHcv: { value: "", unit: "" },
-          australianAntigen: { value: "", unit: "" },
-          bloodUrea: { value: "", unit: "mg/dL" },
-          serumCreatinine: { value: "", unit: "mg/dL" },
-          bloodSugar: { value: "", unit: "mg/dL" },
-          srPsa: { value: "", unit: "ng/mL" },
-        },
-      });
-      setTreatment({ date: "", treatment: "" });
-      setAdvice([
-        { medicine: "", timesPerDay: "", numDoses: "", days: "" },
-        { medicine: "", timesPerDay: "", numDoses: "", days: "" },
-        { medicine: "", timesPerDay: "", numDoses: "", days: "" },
-        { medicine: "", timesPerDay: "", numDoses: "", days: "" },
-      ]);
-      setDynamicInvestigations([]);
-      setCustomBloodWork([]);
-      if (searchType === "name") {
-        setSearchQuery(""); // Clear name search input if no results
+        });
+        setTreatment({ date: "", treatment: "" });
+        setAdvice([
+          { medicine: "", timesPerDay: "", numDoses: "", days: "" },
+          { medicine: "", timesPerDay: "", numDoses: "", days: "" },
+          { medicine: "", timesPerDay: "", numDoses: "", days: "" },
+          { medicine: "", timesPerDay: "", numDoses: "", days: "" },
+        ]);
+        setDynamicInvestigations([]);
+        setCustomBloodWork([]);
       }
     }
   };
 
-  const handleSelectPatient = (patient) => {
-    setPatientInfo({
-      ...patient.patientInfo,
-      registrationNo: patient.id, // Ensure registrationNo is set from the document ID
-    });
-    setInvestigations(patient.investigations);
-    setTreatment(patient.treatment);
-    setAdvice(patient.advice);
-    setDynamicInvestigations(patient.dynamicInvestigations);
-    setCustomBloodWork(patient.customBloodWork);
-    setShowPatientSelectionModal(false);
-    setSearchQuery(""); // Clear name search input after selection
-  };
+  const handleSave = async () => {
+    const dataToSave = {
+      patientInfo,
+      investigations,
+      treatment,
+      advice,
+      dynamicInvestigations,
+      customBloodWork,
+    };
 
-  const PatientSelectionModal = ({ patients, onSelectPatient, onClose }) => {
-    return (
-      <div className="modal-overlay">
-        <div className="modal-content">
-          <h2>Select Patient</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Contact No</th>
-                <th>Registration No</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {patients.map((patient) => (
-                <tr key={patient.id}>
-                  <td>{patient.patientInfo.name}</td>
-                  <td>{patient.patientInfo.contactNo}</td>
-                  <td>{patient.patientInfo.registrationNo}</td>
-                  <td>
-                    <button onClick={() => onSelectPatient(patient)}>
-                      Select
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <button onClick={onClose}>Close</button>
-        </div>
-      </div>
-    );
+    try {
+      await setDoc(doc(db, "patients", patientInfo.registrationNo), dataToSave);
+      alert("Data saved successfully!");
+    } catch (error) {
+      console.error("Error saving data: ", error);
+      alert("Error saving data. Please try again.");
+    }
   };
 
   useEffect(() => {
@@ -498,29 +408,6 @@ function App() {
     uploadLocalStorageData();
   }, []); // Empty dependency array ensures this runs only once on component mount
 
-  const handleSave = async () => {
-    const dataToSave = {
-      patientInfo: patientInfo,
-      investigations: investigations,
-      treatment: treatment,
-      advice: advice,
-      dynamicInvestigations: dynamicInvestigations,
-      customBloodWork: customBloodWork,
-    };
-
-    try {
-      const regNoToSave = patientInfo.registrationNo || searchQuery;
-      if (!regNoToSave) {
-        alert("Cannot save: Registration number or search query is missing.");
-        return;
-      }
-      await setDoc(doc(db, "patients", regNoToSave), dataToSave);
-      alert("Data saved successfully!");
-    } catch (error) {
-      console.error("Error saving data: ", error);
-    }
-  };
-
   return (
     <div className="app-container">
       <div className="form-container">
@@ -537,60 +424,30 @@ function App() {
           <h2>Patient Information</h2>
           <div className="patient-info-grid">
             <div className="input-group search-group">
-              <label htmlFor="registrationNo">Registration No:</label>
+              <label htmlFor="patientId">Registration No:</label>
               <div className="search-input-container">
                 <input
-                  id="registrationNo"
+                  id="patientId"
                   name="registrationNo"
                   type="text"
                   value={patientInfo.registrationNo}
                   onChange={handlePatientInfoChange}
                   placeholder="Enter registration number"
                 />
-                <button
-                  onClick={() => handleSearch("registrationNo")}
-                  className="search-btn"
-                >
+                <button onClick={handleSearch} className="search-btn">
                   <i className="fas fa-search"></i>
                 </button>
               </div>
             </div>
-            {/* <div className="input-group search-group">
-              <label htmlFor="nameSearch">Search by Name:</label>
-              <div className="search-input-container">
-                <input
-                  id="nameSearch"
-                  name="nameSearch"
-                  type="text"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
-                  placeholder="Enter patient name"
-                />
-                <button
-                  onClick={() => handleSearch("name")}
-                  className="search-btn"
-                >
-                  <i className="fas fa-search"></i>
-                </button>
-              </div>
-            </div> */}
-            <div className="input-group search-group">
+            <div className="input-group">
               <label htmlFor="name">Name:</label>
-              <div className="search-input-container">
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  value={patientInfo.name}
-                  onChange={handlePatientInfoChange}
-                />
-                <button
-                  onClick={() => handleSearch("name")}
-                  className="search-btn"
-                >
-                  <i className="fas fa-search"></i>
-                </button>
-              </div>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                value={patientInfo.name}
+                onChange={handlePatientInfoChange}
+              />
             </div>
             <div className="input-group">
               <label htmlFor="age">Age:</label>
@@ -676,7 +533,6 @@ function App() {
                 />
               </div>
             </div>
-            
           </div>
           <div className="input-group full-width">
             <label htmlFor="address">Address:</label>
@@ -1261,13 +1117,6 @@ function App() {
             Save
           </button>
         </div>
-        {showPatientSelectionModal && (
-          <PatientSelectionModal
-            patients={searchResults}
-            onSelectPatient={handleSelectPatient}
-            onClose={() => setShowPatientSelectionModal(false)}
-          />
-        )}
       </div>
 
       {showPdfViewer && (
