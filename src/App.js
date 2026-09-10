@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./App.css";
 import DischargeSummaryPDF from "./PDF";
 import { PDFViewer, PDFDownloadLink } from "@react-pdf/renderer";
 import { db } from "./firebase";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, collection, getDocs } from "firebase/firestore";
 
 const MultiSelect = ({ options, value, onChange, onOtherSelected }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -114,7 +114,27 @@ function App() {
     date: "",
     treatment: "",
   });
-  const [searchRegistrationNo, setSearchRegistrationNo] = useState("");
+
+  const [nameProbables, setNameProbables] = useState([]);
+  const [showNameDropdown, setShowNameDropdown] = useState(false);
+  const [isLoadingPatients, setIsLoadingPatients] = useState(false);
+  const cachedPatients = useRef(null);
+  const nameSearchContainerRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        nameSearchContainerRef.current &&
+        !nameSearchContainerRef.current.contains(event.target)
+      ) {
+        setShowNameDropdown(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleAdviceChange = (index, field, value) => {
     const newAdvice = [...advice];
@@ -263,81 +283,175 @@ function App() {
     </div>
   );
 
-  const handleSearchChange = (e) => {
-    setSearchRegistrationNo(e.target.value);
+
+  const loadPatientData = (data) => {
+    if (data.patientInfo) {
+      setPatientInfo({
+        ...data.patientInfo,
+      });
+    }
+    if (data.investigations) {
+      setInvestigations(data.investigations);
+    }
+    if (data.treatment) {
+      setTreatment(data.treatment);
+    }
+    if (data.advice) {
+      setAdvice(data.advice);
+    }
+    if (data.dynamicInvestigations) {
+      setDynamicInvestigations(data.dynamicInvestigations);
+    }
+    if (data.customBloodWork) {
+      setCustomBloodWork(data.customBloodWork);
+    }
   };
 
   const handleSearch = async () => {
     if (patientInfo.registrationNo.trim() !== "") {
-      const docRef = doc(db, "patients", patientInfo.registrationNo.trim());
-      const docSnap = await getDoc(docRef);
+      try {
+        const docRef = doc(db, "patients", patientInfo.registrationNo.trim());
+        const docSnap = await getDoc(docRef);
 
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        setPatientInfo({
-          ...data.patientInfo,
-        });
-        setInvestigations(data.investigations);
-        setTreatment(data.treatment);
-        setAdvice(data.advice);
-        setDynamicInvestigations(data.dynamicInvestigations);
-        setCustomBloodWork(data.customBloodWork);
-      } else {
-        alert("No patient found with this registration number.");
-        // Reset all states to their initial values
-        setPatientInfo({
-          registrationNo: patientInfo.registrationNo,
-          name: "",
-          age: "",
-          gender: "",
-          roomNo: "",
-          admitDate: "",
-          dischargeDate: "",
-          admitTime: "",
-          dischargeTime: "",
-          address: "",
-          clinicalSummary: "",
-          comorbidities: [],
-          comorbidityOther: "",
-          diagnosis: [],
-          diagnosisOther: "",
-        });
-        setInvestigations({
-          ultrasonography: { date: "", report: "" },
-          ivp: { date: "", report: "" },
-          ctkub: { date: "", report: "" },
-          bloodWork: {
-            date: "",
-            hemoglobin: { value: "", unit: "g/dL" },
-            whiteBloodCell: { value: "", unit: "cells/µL" },
-            wbcComponents: {
-              neutrophil: { value: "", unit: "%" },
-              eosinophil: { value: "", unit: "%" },
-              lymphocyte: { value: "", unit: "%" },
+        if (docSnap.exists()) {
+          loadPatientData(docSnap.data());
+        } else {
+          alert("No patient found with this registration number.");
+          // Reset all states to their initial values
+          setPatientInfo({
+            registrationNo: patientInfo.registrationNo,
+            name: "",
+            age: "",
+            gender: "",
+            roomNo: "",
+            admitDate: "",
+            dischargeDate: "",
+            admitTime: "",
+            dischargeTime: "",
+            address: "",
+            clinicalSummary: "",
+            comorbidities: [],
+            comorbidityOther: "",
+            diagnosis: [],
+            diagnosisOther: "",
+          });
+          setInvestigations({
+            ultrasonography: { date: "", report: "" },
+            ivp: { date: "", report: "" },
+            ctkub: { date: "", report: "" },
+            bloodWork: {
+              date: "",
+              hemoglobin: { value: "", unit: "g/dL" },
+              whiteBloodCell: { value: "", unit: "cells/µL" },
+              wbcComponents: {
+                neutrophil: { value: "", unit: "%" },
+                eosinophil: { value: "", unit: "%" },
+                lymphocyte: { value: "", unit: "%" },
+              },
+              platelets: { value: "", unit: "cells/µL" },
+              bloodGroup: { value: "", unit: "" },
+              rhFactor: { value: "", unit: "" },
+              elisaForHiv1And2: { value: "", unit: "" },
+              elisaNonHcv: { value: "", unit: "" },
+              australianAntigen: { value: "", unit: "" },
+              bloodUrea: { value: "", unit: "mg/dL" },
+              serumCreatinine: { value: "", unit: "mg/dL" },
+              bloodSugar: { value: "", unit: "mg/dL" },
+              srPsa: { value: "", unit: "ng/mL" },
             },
-            platelets: { value: "", unit: "cells/µL" },
-            bloodGroup: { value: "", unit: "" },
-            rhFactor: { value: "", unit: "" },
-            elisaForHiv1And2: { value: "", unit: "" },
-            elisaNonHcv: { value: "", unit: "" },
-            australianAntigen: { value: "", unit: "" },
-            bloodUrea: { value: "", unit: "mg/dL" },
-            serumCreatinine: { value: "", unit: "mg/dL" },
-            bloodSugar: { value: "", unit: "mg/dL" },
-            srPsa: { value: "", unit: "ng/mL" },
-          },
-        });
-        setTreatment({ date: "", treatment: "" });
-        setAdvice([
-          { medicine: "", timesPerDay: "", numDoses: "", days: "" },
-          { medicine: "", timesPerDay: "", numDoses: "", days: "" },
-          { medicine: "", timesPerDay: "", numDoses: "", days: "" },
-          { medicine: "", timesPerDay: "", numDoses: "", days: "" },
-        ]);
-        setDynamicInvestigations([]);
-        setCustomBloodWork([]);
+          });
+          setTreatment({ date: "", treatment: "" });
+          setAdvice([
+            { medicine: "", timesPerDay: "", numDoses: "", days: "" },
+            { medicine: "", timesPerDay: "", numDoses: "", days: "" },
+            { medicine: "", timesPerDay: "", numDoses: "", days: "" },
+            { medicine: "", timesPerDay: "", numDoses: "", days: "" },
+          ]);
+          setDynamicInvestigations([]);
+          setCustomBloodWork([]);
+        }
+      } catch (error) {
+        console.error("Error searching by registration number: ", error);
+        alert("Error searching for patient. Please try again.");
       }
     }
+  };
+
+  const fetchAllPatients = async () => {
+    if (cachedPatients.current !== null) {
+      return cachedPatients.current;
+    }
+    setIsLoadingPatients(true);
+    try {
+      const snapshot = await getDocs(collection(db, "patients"));
+      const patients = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        patients.push({
+          ...data,
+          _docId: docSnap.id,
+        });
+      });
+      cachedPatients.current = patients;
+      setIsLoadingPatients(false);
+      return patients;
+    } catch (error) {
+      console.error("Error fetching patients: ", error);
+      setIsLoadingPatients(false);
+      return [];
+    }
+  };
+
+  const handleNameChange = async (e) => {
+    const value = e.target.value;
+    handlePatientInfoChange(e);
+
+    if (value.trim() === "") {
+      setNameProbables([]);
+      setShowNameDropdown(false);
+      return;
+    }
+
+    const allPatients = await fetchAllPatients();
+    const queryLower = value.trim().toLowerCase();
+    const matches = allPatients.filter((p) => {
+      const pName = p.patientInfo?.name || "";
+      const pReg = p.patientInfo?.registrationNo || "";
+      return (
+        pName.toLowerCase().includes(queryLower) ||
+        pReg.toLowerCase().includes(queryLower)
+      );
+    });
+
+    setNameProbables(matches);
+    setShowNameDropdown(true);
+  };
+
+  const handleNameSearch = async () => {
+    const allPatients = await fetchAllPatients();
+    const queryLower = patientInfo.name.trim().toLowerCase();
+
+    let matches = [];
+    if (queryLower === "") {
+      matches = allPatients;
+    } else {
+      matches = allPatients.filter((p) => {
+        const pName = p.patientInfo?.name || "";
+        const pReg = p.patientInfo?.registrationNo || "";
+        return (
+          pName.toLowerCase().includes(queryLower) ||
+          pReg.toLowerCase().includes(queryLower)
+        );
+      });
+    }
+
+    setNameProbables(matches);
+    setShowNameDropdown(true);
+  };
+
+  const handleSelectPatient = (patient) => {
+    loadPatientData(patient);
+    setShowNameDropdown(false);
   };
 
   const handleSave = async () => {
@@ -352,6 +466,16 @@ function App() {
 
     try {
       await setDoc(doc(db, "patients", patientInfo.registrationNo), dataToSave);
+      if (cachedPatients.current) {
+        const existingIdx = cachedPatients.current.findIndex(
+          (p) => p.patientInfo?.registrationNo === patientInfo.registrationNo
+        );
+        if (existingIdx >= 0) {
+          cachedPatients.current[existingIdx] = dataToSave;
+        } else {
+          cachedPatients.current.push(dataToSave);
+        }
+      }
       alert("Data saved successfully!");
     } catch (error) {
       console.error("Error saving data: ", error);
@@ -433,21 +557,110 @@ function App() {
                   value={patientInfo.registrationNo}
                   onChange={handlePatientInfoChange}
                   placeholder="Enter registration number"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleSearch();
+                    }
+                  }}
                 />
-                <button onClick={handleSearch} className="search-btn">
+                <button type="button" onClick={handleSearch} className="search-btn">
                   <i className="fas fa-search"></i>
                 </button>
               </div>
             </div>
-            <div className="input-group">
+            <div
+              className="input-group search-group"
+              ref={nameSearchContainerRef}
+            >
               <label htmlFor="name">Name:</label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                value={patientInfo.name}
-                onChange={handlePatientInfoChange}
-              />
+              <div
+                className="search-input-container"
+                style={{ position: "relative" }}
+              >
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  value={patientInfo.name}
+                  onChange={handleNameChange}
+                  onFocus={async () => {
+                    if (patientInfo.name.trim() !== "") {
+                      const allPatients = await fetchAllPatients();
+                      const queryLower = patientInfo.name.trim().toLowerCase();
+                      const matches = allPatients.filter((p) => {
+                        const pName = p.patientInfo?.name || "";
+                        const pReg = p.patientInfo?.registrationNo || "";
+                        return (
+                          pName.toLowerCase().includes(queryLower) ||
+                          pReg.toLowerCase().includes(queryLower)
+                        );
+                      });
+                      setNameProbables(matches);
+                      setShowNameDropdown(true);
+                    }
+                  }}
+                  placeholder="Enter patient name"
+                  autoComplete="off"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleNameSearch();
+                    } else if (e.key === "Escape") {
+                      setShowNameDropdown(false);
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleNameSearch}
+                  className="search-btn"
+                  title="Search probables by name"
+                >
+                  <i className="fas fa-search"></i>
+                </button>
+
+                {showNameDropdown && (
+                  <div className="patient-suggestions-dropdown">
+                    {isLoadingPatients ? (
+                      <div className="patient-suggestion-empty">
+                        Loading probables...
+                      </div>
+                    ) : nameProbables.length > 0 ? (
+                      nameProbables.map((p, idx) => (
+                        <div
+                          key={p.patientInfo?.registrationNo || idx}
+                          className="patient-suggestion-item"
+                          onClick={() => handleSelectPatient(p)}
+                        >
+                          <div className="patient-suggestion-main">
+                            <span className="patient-suggestion-name">
+                              {p.patientInfo?.name || "Unnamed"}
+                            </span>
+                            {p.patientInfo?.admitDate && (
+                              <span className="patient-suggestion-meta">
+                                Admit: {p.patientInfo.admitDate}
+                                {p.patientInfo?.diagnosis?.length > 0 &&
+                                  ` • ${p.patientInfo.diagnosis.join(", ")}`}
+                              </span>
+                            )}
+                          </div>
+                          <span className="patient-suggestion-badge">
+                            Reg:{" "}
+                            {p.patientInfo?.registrationNo ||
+                              p._docId ||
+                              "N/A"}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="patient-suggestion-empty">
+                        No probables found
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             <div className="input-group">
               <label htmlFor="age">Age:</label>
