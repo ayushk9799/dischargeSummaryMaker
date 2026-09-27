@@ -301,9 +301,13 @@ function App() {
     }
     if (data.dynamicInvestigations) {
       setDynamicInvestigations(data.dynamicInvestigations);
+    } else {
+      setDynamicInvestigations([]);
     }
     if (data.customBloodWork) {
       setCustomBloodWork(data.customBloodWork);
+    } else {
+      setCustomBloodWork([]);
     }
   };
 
@@ -383,22 +387,83 @@ function App() {
     }
     setIsLoadingPatients(true);
     try {
-      const snapshot = await getDocs(collection(db, "patients"));
+      const url =
+        "https://firestore.googleapis.com/v1/projects/dischargesummary-1d522/databases/(default)/documents:runQuery";
+      const body = {
+        structuredQuery: {
+          from: [{ allDescendants: true }],
+          select: {
+            fields: [
+              { fieldPath: "patientInfo.name" },
+              { fieldPath: "patientInfo.registrationNo" },
+              { fieldPath: "patientInfo.admitDate" },
+              { fieldPath: "patientInfo.diagnosis" },
+            ],
+          },
+        },
+      };
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP error ${res.status}`);
+      }
+
+      const data = await res.json();
       const patients = [];
-      snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
+      data.forEach((d) => {
+        if (!d.document) return;
+        const path = d.document.name.split("/documents/")[1];
+        const fields = d.document.fields || {};
+        const pi = fields.patientInfo?.mapValue?.fields || {};
+        const name = pi.name?.stringValue || "";
+        const registrationNo =
+          pi.registrationNo?.stringValue || path.replace(/^patients\//, "");
+        const admitDate = pi.admitDate?.stringValue || "";
+        const diagnosis =
+          pi.diagnosis?.arrayValue?.values
+            ?.map((v) => v.stringValue)
+            .filter(Boolean) || [];
+
         patients.push({
-          ...data,
-          _docId: docSnap.id,
+          _path: path,
+          _docId: path.split("/").pop(),
+          patientInfo: {
+            name,
+            registrationNo,
+            admitDate,
+            diagnosis,
+          },
         });
       });
+
       cachedPatients.current = patients;
       setIsLoadingPatients(false);
       return patients;
     } catch (error) {
-      console.error("Error fetching patients: ", error);
-      setIsLoadingPatients(false);
-      return [];
+      console.error("Error fetching all patients, falling back to root:", error);
+      try {
+        const snapshot = await getDocs(collection(db, "patients"));
+        const fallbackPatients = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          fallbackPatients.push({
+            ...data,
+            _path: `patients/${docSnap.id}`,
+            _docId: docSnap.id,
+          });
+        });
+        cachedPatients.current = fallbackPatients;
+        setIsLoadingPatients(false);
+        return fallbackPatients;
+      } catch (fallbackErr) {
+        console.error("Fallback error:", fallbackErr);
+        setIsLoadingPatients(false);
+        return [];
+      }
     }
   };
 
@@ -423,7 +488,7 @@ function App() {
       );
     });
 
-    setNameProbables(matches);
+    setNameProbables(matches.slice(0, 30));
     setShowNameDropdown(true);
   };
 
@@ -445,13 +510,30 @@ function App() {
       });
     }
 
-    setNameProbables(matches);
+    setNameProbables(matches.slice(0, 30));
     setShowNameDropdown(true);
   };
 
-  const handleSelectPatient = (patient) => {
-    loadPatientData(patient);
+  const handleSelectPatient = async (patient) => {
     setShowNameDropdown(false);
+    if (patient.patientInfo) {
+      setPatientInfo((prev) => ({
+        ...prev,
+        ...patient.patientInfo,
+      }));
+    }
+    try {
+      const docPath =
+        patient._path ||
+        `patients/${patient._docId || patient.patientInfo?.registrationNo}`;
+      const docRef = doc(db, docPath);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        loadPatientData(docSnap.data());
+      }
+    } catch (err) {
+      console.error("Error loading selected patient document:", err);
+    }
   };
 
   const handleSave = async () => {
@@ -470,10 +552,15 @@ function App() {
         const existingIdx = cachedPatients.current.findIndex(
           (p) => p.patientInfo?.registrationNo === patientInfo.registrationNo
         );
+        const itemToCache = {
+          _path: `patients/${patientInfo.registrationNo}`,
+          _docId: patientInfo.registrationNo,
+          patientInfo: dataToSave.patientInfo,
+        };
         if (existingIdx >= 0) {
-          cachedPatients.current[existingIdx] = dataToSave;
+          cachedPatients.current[existingIdx] = itemToCache;
         } else {
-          cachedPatients.current.push(dataToSave);
+          cachedPatients.current.unshift(itemToCache);
         }
       }
       alert("Data saved successfully!");
@@ -596,7 +683,7 @@ function App() {
                           pReg.toLowerCase().includes(queryLower)
                         );
                       });
-                      setNameProbables(matches);
+                      setNameProbables(matches.slice(0, 30));
                       setShowNameDropdown(true);
                     }
                   }}
